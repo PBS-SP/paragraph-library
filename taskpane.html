@@ -406,14 +406,26 @@ Office.onReady(() => {
 async function loadParagraphs() {
   setStatus("loading", "Loading…");
   try {
+    // Get Office auth token to authenticate with SharePoint
+    const token = await getOfficeToken();
+    
     const url = `${SHAREPOINT_SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items` +
                 `?$select=Title,Category,Content,SortOrder` +
                 `&$orderby=Category,SortOrder` +
                 `&$top=500`;
 
+    const headers = { 
+      Accept: "application/json;odata=nometadata",
+    };
+    
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const resp = await fetch(url, {
-      headers: { Accept: "application/json;odata=nometadata" },
-      credentials: "include"
+      headers,
+      credentials: "include",
+      mode: "cors"
     });
 
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -429,6 +441,23 @@ async function loadParagraphs() {
     setStatus("error", "Could not load — check config");
     showFallback(err);
   }
+}
+
+// ── Get Office auth token ─────────────────────
+function getOfficeToken() {
+  return new Promise((resolve) => {
+    if (!Office.context.auth) { resolve(null); return; }
+    Office.context.auth.getAccessTokenAsync(
+      { allowSignInPrompt: true, allowConsentPrompt: true },
+      result => {
+        if (result.status === Office.AsyncResultStatus.Succeeded) {
+          resolve(result.value);
+        } else {
+          resolve(null);
+        }
+      }
+    );
+  });
 }
 
 // ── Fallback sample data (for setup/testing) ─
