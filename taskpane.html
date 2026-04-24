@@ -461,9 +461,9 @@ function render() {
         <span class="card-title">${escHtml(p.Title)}</span>
         <span class="tag ${tagClass(p.Category)}">${escHtml(p.Category || "Other")}</span>
       </div>
-      <div class="card-preview">${escHtml(p.Content)}</div>
+      <div class="card-preview">${escHtml(stripHtml(p.Content))}</div>
       <div class="card-footer">
-        <span class="card-chars">${p.Content.length} chars</span>
+        <span class="card-chars">${stripHtml(p.Content).length} chars</span>
         <button class="insert-btn" data-index="${i}">Insert ↵</button>
       </div>
     </div>
@@ -572,6 +572,10 @@ function tagClass(cat) {
 
 function escHtml(str) {
   return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function stripHtml(str) {
+  return (str || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function setStatus(state, msg) {
