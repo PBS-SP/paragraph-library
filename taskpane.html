@@ -492,8 +492,8 @@ function insertParagraph(para) {
   // Word's native HTML importer preserves bold, italic, bullets etc.
   const html =
     `<html><body>` +
-    `<h2 style="font-family:Aptos,Calibri,sans-serif;font-size:14pt;font-weight:bold;margin:0 0 4pt 0;">${escHtml(para.Title)}</h2>` +
-    `<div style="font-family:Aptos,Calibri,sans-serif;font-size:11pt;">${para.Content}</div>` +
+    `<p style="font-family:Aptos,Calibri,sans-serif;font-size:14pt;font-weight:bold;color:#000000;margin:0 0 6pt 0;">${escHtml(para.Title)}</p>` +
+    `<div style="font-family:Aptos,Calibri,sans-serif;font-size:11pt;color:#000000;">${para.Content}</div>` +
     `</body></html>`;
 
   const insertType = Office.CoercionType.Html;
