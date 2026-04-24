@@ -402,26 +402,13 @@ Office.onReady(() => {
   wireUI();
 });
 
-// ── Load from Power Automate flow ────────────
+// ── Load from paragraphs.json ─────────────────
 async function loadParagraphs() {
   setStatus("loading", "Loading…");
   try {
-    const FLOW_URL = "https://defaultec90024da2604d5ba05fa070e52fc3.e4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5846643fd107496596d9f159863b4351/triggers/manual/paths/invoke?api-version=1";
-
-    const resp = await fetch(FLOW_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({})
-    });
-
+    const resp = await fetch("paragraphs.json?v=" + Date.now());
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    allParagraphs = (data.value || []).map(item => ({
-      Title: item.Title,
-      Category: item.Category,
-      Content: item.Content,
-      SortOrder: item.SortOrder
-    }));
+    allParagraphs = await resp.json();
 
     setStatus("ok", "Connected");
     document.getElementById("lastUpdated").textContent =
@@ -429,26 +416,9 @@ async function loadParagraphs() {
 
     render();
   } catch (err) {
-    setStatus("error", "Could not load — check config");
+    setStatus("error", "Could not load paragraphs.json");
     showFallback(err);
   }
-}
-
-// ── Get Office auth token ─────────────────────
-function getOfficeToken() {
-  return new Promise((resolve) => {
-    if (!Office.context.auth) { resolve(null); return; }
-    Office.context.auth.getAccessTokenAsync(
-      { allowSignInPrompt: true, allowConsentPrompt: true },
-      result => {
-        if (result.status === Office.AsyncResultStatus.Succeeded) {
-          resolve(result.value);
-        } else {
-          resolve(null);
-        }
-      }
-    );
-  });
 }
 
 // ── Fallback sample data (for setup/testing) ─

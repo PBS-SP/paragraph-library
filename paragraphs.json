@@ -1,0 +1,152 @@
+[
+  {
+    "Title": "Division 7A Loans - Debit Loan Warning",
+    "Category": "Client Communications",
+    "SortOrder": 10,
+    "Content": "<p>In the Financial Statements of the Company, we believe that the following amounts would be viewed by the ATO as &ldquo;debit loan accounts&rdquo;. This represents cash that has been drawn out of the Company by individuals (or associated Trusts) without personal income tax being paid. <em>GIVE AN EXPLANATION - eg. The main contributor to this situation was the use of business funds to purchase your investment property.</em></p><table><tr><th>DETAILS</th><th>AMOUNT</th></tr><tr><td>LOANS - <em>name</em></td><td>$0</td></tr><tr><td><strong>TOTAL</strong></td><td><strong>$0</strong></td></tr></table><p>The effect of Division 7A on the above loan accounts is to deem these amounts as unfranked dividends (i.e. dividends with no imputation credits) paid from the Company to shareholders. This could result in a bad tax outcome, with shareholders possibly paying tax at the top marginal rate of 47%.</p>"
+  },
+  {
+    "Title": "Division 7A - Option 1: Payment of Franked Dividend",
+    "Category": "Client Communications",
+    "SortOrder": 20,
+    "Content": "<p><strong>OPTION 1 - Payment of Franked Dividend</strong></p><p>You could issue a franked dividend from your Company to remove this loan account. For example, as at 30 June 2024 this Company had $amount in retained profits (please refer to the attached Financial Statements). This means that a franked dividend could be issued as follows:</p><table><tr><td>Dividend - Person 1</td><td>$amount</td></tr><tr><td>Dividend - Person 2</td><td>$amount</td></tr><tr><td><strong>Total</strong></td><td><strong>$amount</strong></td></tr></table><p>Your debit loan accounts would then reduce to $NIL. The estimated extra income tax to pay in your 2024 Income Tax Return would be approximately $Extra Tax.</p><p>The above tax calculation assumes gross wages of approximately $Wages Amount from Business Name.</p>"
+  },
+  {
+    "Title": "Division 7A - Option 2: Formalise Loan Agreement",
+    "Category": "Client Communications",
+    "SortOrder": 30,
+    "Content": "<p><strong>OPTION 2 - Formalise the loans through a Loan Agreement</strong></p><p>The above loans could be formalised through signing a Loan Agreement to repay interest and principal amounts back to the business. As they would be considered to be unsecured, they would need to be paid back over a 7-year period. The interest rate for the 2024 financial year is 8.27%. The minimum repayments are calculated under the relevant Tax Act provisions. This interest would not be tax deductible as it is not linked to any direct income producing investment.</p>"
+  },
+  {
+    "Title": "Division 7A - How to Avoid in Future",
+    "Category": "Client Communications",
+    "SortOrder": 40,
+    "Content": "<p><strong>How to avoid this situation in the future</strong></p><p>We recommend that you declare a wage from Business Name, which matches your consumption needs. Based on 2023 tax rates, if you need to live on say $60,853 (net after tax) then the wage to be declared in the trust is $80,000 (gross) and PAYG withholding of $19,147 needs to be paid. Also, superannuation of $8,800 (11% of your gross wages amount of $80,000) will have to be paid by the required payment deadline.</p>"
+  },
+  {
+    "Title": "Division 7A - Existing Loan Agreement",
+    "Category": "Client Communications",
+    "SortOrder": 50,
+    "Content": "<p>Division 7A contains anti-avoidance provisions designed to prevent tax-free payments from private companies to associated persons i.e. &ldquo;debit loans&rdquo;. The effect of Division 7A is to deem these amounts as unfranked dividends (i.e. dividends with no imputation credits). The shareholder or their associated would need to include the full amount of the loan in their tax return.</p><p>This Company has entered into a Loan Agreement with the Trust Name for the repayment of their &ldquo;debit loan&rdquo; account in 2024. We have adjusted your 2024 Financial Statements and Income Tax Returns to ensure that the appropriate interest and capital repayments have been made on your &ldquo;debit loan&rdquo;.</p><table><tr><th>DATE</th><th>DESCRIPTION</th><th>REPAYMENT</th><th>INTEREST</th><th>BALANCE</th></tr><tr><td><em>date</em></td><td><em>description</em></td><td>$0</td><td>$0</td><td><strong>$0</strong></td></tr></table><p>The loan will not be taken to be a dividend because the total repayments are greater than the minimum year repayment required for 2024.</p>"
+  },
+  {
+    "Title": "Payment of Company Tax",
+    "Category": "Client Communications",
+    "SortOrder": 60,
+    "Content": "<p>Companies are subject to full self-assessment which means that assessments (based upon the taxable income disclosed in returns) are deemed to be issued and the tax owing is due and payable upon lodgement of the Income Tax Return.</p><p><em>It is your responsibility to ensure that the amount of $amount is paid to the Australian Taxation Office by Due Date.</em></p><p>An income tax assessment notice will not be issued to the Company. Please use the enclosed payment advice and make your payment to the Australian Taxation Office by <strong>Due Date</strong>.</p>"
+  },
+  {
+    "Title": "Personal Services Income",
+    "Category": "Client Communications",
+    "SortOrder": 70,
+    "Content": "<p>The purpose of the personal services income (PSI) rules is to ensure that income derived from personal services is taxed in the hands of the individual who performs the work, regardless of whether the income is derived by an individual, partnership, company or trust. The PSI rules do not apply if the entity is treated as carrying on a personal services business (by passing certain tests). It appears that your Company is carrying on a personal services business as it passes the INSERT TEST. We have prepared your 2024 Tax Return on this basis.</p>"
+  },
+  {
+    "Title": "Potential Insolvent Trading",
+    "Category": "Client Communications",
+    "SortOrder": 80,
+    "Content": "<p>You will observe from the enclosed Financial Statements that this Company had a working capital deficiency at the end of the 2024 financial year.</p><p>There is an obligation under the Corporations Law for the Directors to make a statement as to whether or not &ldquo;there are reasonable grounds to believe that the company will be able to pay its debts as and when they fall due&rdquo;.</p><p>If Directors knowingly make a false statement, they are in breach of the Corporations Law and may become personally liable for company debts. Likewise, if they make a statement that the company is unable to pay its debts but then continue to trade in that situation, they are also in breach of the Corporations Law.</p><p>If you consider, in view of the abovementioned deficiency, that your company is in this situation, it would appear that additional funds would need to be injected by the Directors/Shareholders in the form of subordinated loans or share capital. If by way of loans, the providers of such funds would then need to give an undertaking that they would not call up the loans unless all other creditors had been paid. The alternative is liquidation.</p><p>We strongly recommend that you consider our advice above, and then immediately contact our office if you would like to discuss this further.</p>"
+  },
+  {
+    "Title": "Adjusting Entries for Accounting System",
+    "Category": "Client Communications",
+    "SortOrder": 90,
+    "Content": "<p>Please find enclosed a list of Xero / MYOB / QuickBooks / XXXX adjusting entries required to update your 2024 computerised Financial Statements. You will need to update your computer file with these entries so that our records reconcile. Once you have recorded these transactions, please send to our office a copy of your Balance Sheet as at 30 June 2024 so that we can ensure your records and our records match.</p><p>Please feel free to contact our office if you require assistance with the above entries.</p>"
+  },
+  {
+    "Title": "Accounting vs Taxation Income",
+    "Category": "Client Communications",
+    "SortOrder": 100,
+    "Content": "<p>You will notice that the profit on your Financial Statements of $amount differs from the profit on your Income Tax Return of $amount. This difference is made up of the following tax adjustments:</p><p><em><strong>Unpaid Leave Entitlements:</strong></em><br>Accrued leave entitlements refer to annual leave and long service leave payments that your employees are presently entitled to but which have not yet been taken. As the employer, you will be entitled to a deduction in respect of accrued leave entitlements when they are paid to the employee.</p><p><em><strong>Unpaid Employee Superannuation:</strong></em><br>Superannuation can only be claimed as a tax deduction when it is physically paid to the superannuation fund and clears your bank account.</p><p><em><strong>Fines:</strong></em><br>Fines are not tax deductible and therefore have been added back to your income for tax purposes.</p><p><em><strong>Entertainment Expenses:</strong></em><br>Certain entertainment expenses are not tax deductible and have therefore been added back for taxation purposes.</p><p><em><strong>Franking Credits on Dividends:</strong></em><br>The entity type has received franked dividends during the year. As only cash received for the dividend is included in accounting income, the franking credits attached to the dividend need to be added to assessable income. The franking credits then form part of the tax you have paid to ensure the dividend income is not taxed twice.</p><p><em><strong>Instant Asset Write Off:</strong></em><br>For the 2024 Financial Year, [Business Name] was eligible for the Instant Asset Write Off. This meant that your business was able to claim an immediate tax deduction for eligible assets and equipment purchased up to the threshold of $150,000 each during the year. Additionally, because your Small Business Pool Balance was less than $150,000 at the end of the financial year, we were able to write off the entire pool balance and save you tax.</p><p><strong>Total Tax Saving = $x,xxx</strong></p>"
+  },
+  {
+    "Title": "Cash Basis Adjustment",
+    "Category": "Client Communications",
+    "SortOrder": 110,
+    "Content": "<p>We have deducted the amounts owed by the Trade Debtors of your business as at 30 June 2024 from the revenue amount in the Income Tax Return of your business. This is because your Financial Statements are prepared on an accruals basis, whereas your taxable income is calculated on a cash basis. Under a cash basis, revenue is only recognised when cash is received from customers and expenses when they are paid to a supplier.</p><p>Therefore, while the <strong>net profit</strong> of your business was $amount, the <strong>taxable income</strong> of the business was $amount after adjusting for your trade debtors and creditors.</p><p><em>IMPORTANT NOTE: You will need to make adequate provision for increased tax payments in the future created by this adjustment.</em></p><p><strong>TOTAL TAX SAVED - Timing Difference $amount</strong></p>"
+  },
+  {
+    "Title": "Employee Superannuation - Shortfall",
+    "Category": "Client Communications",
+    "SortOrder": 120,
+    "Content": "<p>During the 2024 financial year, it appears that Business Name has not paid the required 9.5% employer superannuation contribution for employees. The shortfall of superannuation contributions for the 2024 financial year is $shortfall amount.</p><p>The above payments were due to be paid by 28 July 2024. Please note that if your superannuation payment was made AFTER 28 July 2024, but was made PRIOR to 28 August 2024, the payment can still be made to a superannuation fund, however a Superannuation Guarantee Charge Statement must be completed and sent to the ATO along with a Super Guarantee Late Payment Offset Election to allow your payment to offset any liability created by the Superannuation Guarantee Charge Statement.</p><p>Alternatively, should payment be made after 28 August 2024, the payment must be made direct to the ATO and remitted with a Superannuation Guarantee Charge Statement. If payment was also made to a superannuation fund, you will not be eligible for an offset and the full Superannuation Guarantee Charge will still be liable.</p><p>If you didn&rsquo;t pay these amounts by 28 July 2024, please contact our office immediately to determine the best outcome for your situation, as these issues can be quite complex! If needed, we can also prepare the appropriate documents for you to send to the ATO along with your payment.</p>"
+  },
+  {
+    "Title": "Extended Time for Lodgement",
+    "Category": "Client Communications",
+    "SortOrder": 130,
+    "Content": "<p>Because Client Name has tax payable, lodgement can be delayed should you desire. When the payment is due, however, relies upon the actual lodgement date of the return:</p><ul><li>If lodged before 12 February 2021, payment will be due by 21 March 2021</li><li>If lodged between 13 February and 12 March 2021, payment will be due by 21 April 2021</li><li>If lodged between 13 March and 15 May 2021, payment will be due by 5 June 2021</li></ul><p>As you can see, there are plenty of options that allow you to dictate when you pay the ATO and can allow for you to have the funds working for you a little longer rather than for the government!</p><p><strong>Would you please advise when you would like us to lodge Client Name&rsquo;s return?</strong></p>"
+  },
+  {
+    "Title": "GST Adjustment - Prepared by Us",
+    "Category": "GST / Tax",
+    "SortOrder": 10,
+    "Content": "<p>As part of our overall review of your accounting records for the year, we carefully check to see that your lodged Business Activity Statements (BAS&rsquo;s) were correct. Due to various adjustments made during the preparation of your 2024 Financial Statements, it will be necessary to amend your June 2024 Business Activity Statement (BAS). This GST adjustment is due primarily to LIST OUT REASONS.</p><p>We have prepared an Activity Statement Revision Request Form on your behalf to reflect the adjustments on your June 2024 Business Activity Statement. Can you please sign it where indicated and return it to our office for lodgement with the Australian Taxation Office?</p><table><tr><th>Activity Statement Revision</th><th></th></tr><tr><td>GST Collected</td><td>$amount</td></tr><tr><td>Less: GST Paid</td><td>$amount</td></tr><tr><td>Original GST Payable / Refundable</td><td>$amount</td></tr><tr><td>Less: 2024 Year End Adjustment</td><td>$amount</td></tr><tr><td>Amended June 2024</td><td>$amount</td></tr><tr><td><strong>TOTAL PAYABLE/(REFUNDABLE)</strong></td><td><strong>$amount</strong></td></tr></table>"
+  },
+  {
+    "Title": "GST Adjustment - Prepared by You",
+    "Category": "GST / Tax",
+    "SortOrder": 20,
+    "Content": "<p>As part of our overall review of your accounting records for the year, we carefully check to see that your lodged Business Activity Statements (BAS&rsquo;s) were correct. Due to various adjustments made during the preparation of your 2024 Financial Statements, it will be necessary to amend your June 2024 Business Activity Statement (BAS). This GST adjustment is due primarily to LIST OUT REASONS.</p><p>As shown in your 2024 Financial Statements, the total GST adjustment required on your June 2024 BAS is $amount. This GST adjustment will increase / decrease your liability on your next BAS by $amount.</p><p>You will need to [add/subtract] the following figures from your next BAS:</p><table><tr><td>G1</td><td>$amount</td></tr><tr><td>G11</td><td>$amount</td></tr><tr><td>G10</td><td>$amount</td></tr><tr><td>1A</td><td>$amount</td></tr><tr><td>1B</td><td>$amount</td></tr></table>"
+  },
+  {
+    "Title": "Motor Vehicle Expenses",
+    "Category": "Client Communications",
+    "SortOrder": 140,
+    "Content": "<p>We have adjusted your 2024 Income Tax Returns to allow for the business use percentages listed below or as used by your previous Accountants. We recommend that you keep a motor vehicle log book for a 12-week period in the current year to confirm your business use percentage.</p><table><tr><td>Car No. 1</td><td>xx%</td></tr><tr><td>Car No. 2</td><td>xx%</td></tr></table>"
+  },
+  {
+    "Title": "Overtime Meal Allowance",
+    "Category": "Client Communications",
+    "SortOrder": 150,
+    "Content": "<p>An allowance of $amount for the individuals below has been included. This is non-taxable. We have enclosed a letter that explains the calculation of your Overtime Meal Allowance and the basis for your claim. You will need to sign and return this letter to us for us to keep on our files.</p><table><tr><td>Individual Name</td><td>$amount</td></tr><tr><td>Individual Name</td><td>$amount</td></tr><tr><td>Individual Name</td><td>$amount</td></tr><tr><td><strong>TOTAL TAX SAVING</strong></td><td><strong>$amount</strong></td></tr></table>"
+  },
+  {
+    "Title": "Record-Keeping Recommendations",
+    "Category": "Client Communications",
+    "SortOrder": 160,
+    "Content": "<p>After our review of your financial information, we recommend that you make the following changes to your procedures:</p><ul><li>First recommendation</li><li>Second</li><li>Third, etc.</li></ul><p>In addition, please refer to the enclosed list of Xero / MYOB / QuickBooks / XXXX adjusting entries for further details on how to improve your record keeping.</p><p>Please feel free to contact our office for any additional help you may need to improve your financial record-keeping.</p>"
+  },
+  {
+    "Title": "Tax Return Lodgement Deadline",
+    "Category": "Client Communications",
+    "SortOrder": 170,
+    "Content": "<p>As all extensions of time for lodgement of your Income Tax Returns have now lapsed, late lodgement penalties are likely to be charged by the ATO. In order to minimise such penalties, we recommend that you make all tax payments indicated in this report <strong>as soon as possible</strong>.</p><p>Late lodgement penalties and General Interest Charge may accrue from the due date for lodgement of Due Date.</p>"
+  },
+  {
+    "Title": "Tools of Trade / Notebook Computer",
+    "Category": "Client Communications",
+    "SortOrder": 180,
+    "Content": "<p>An immediate deduction for the salary packaged tools of trade / notebook computer purchased during the year has been claimed by Business Name.</p><table><tr><td><strong>TOTAL TAX SAVING</strong></td><td><strong>$amount</strong></td></tr></table>"
+  },
+  {
+    "Title": "Travel Allowance",
+    "Category": "Client Communications",
+    "SortOrder": 190,
+    "Content": "<p>A Travel Allowance totalling $X,XXX has been included for the following individuals [based upon the business travel indicated in your Travel Schedule OR based upon your details provided to our office].</p><table><tr><td>Individual Name</td><td>$amount</td></tr><tr><td>Individual Name</td><td>$amount</td></tr><tr><td>Individual Name</td><td>$amount</td></tr><tr><td><strong>TOTAL TAX SAVING</strong></td><td><strong>$amount</strong></td></tr></table>"
+  },
+  {
+    "Title": "Travel Expenses",
+    "Category": "Client Communications",
+    "SortOrder": 200,
+    "Content": "<p>You have advised us that all travel and accommodation expenses were in relation to business activities. The Taxation Office requires that you keep a travel diary to substantiate any travel period of more than 6 days.</p>"
+  },
+  {
+    "Title": "Introducing Xero",
+    "Category": "Client Communications",
+    "SortOrder": 210,
+    "Content": "<p>We are now using Xero in our Accounting firm - Xero is an easy to use but powerful online accounting system that&rsquo;s designed specifically for small businesses like yours.</p><p>Xero provides a view of financial information in real-time. There&rsquo;s no need to buy expensive software and install upgrades. Xero is available on your PC or Mac in the office, at home or on popular mobile devices - anywhere there is an internet connection.</p><p>The privacy and security of your data is taken care of and is stored on Xero&rsquo;s secure servers, where it&rsquo;s backed up regularly. This means even if your computer is lost or stolen your data is safe.</p><p>Xero automatically imports your bank statements daily so you can keep abreast of your cashflow. Xero has a full suite of accounting features such as invoicing, payables, expense claims, GST, tax returns, reporting and much more.</p><p>The beauty of Xero is you can invite a number of trusted people such as us, your Accountants, to collaborate online. No more cumbersome transfer of data that can be corrupted or is out-of-date. We can both work on and view your accounting data at the same time!</p><p>We think your business is perfectly suited to using Xero, as a Xero Certified Partner, we can introduce you to Xero and have you up and running in no time. We will discuss this with you at our upcoming Annual General Meeting.</p>"
+  },
+  {
+    "Title": "Invoice for Accounting Services",
+    "Category": "Engagement Letters",
+    "SortOrder": 10,
+    "Content": "<p>Since we have now completed your Financial Statements and Income Tax Returns, we have enclosed an Invoice for our services. The Invoice gives you a detailed description of work performed.</p><p>The amount that we have invoiced you this year has increased due to the following reasons:</p><ul><li>List out reasons</li></ul><p>For the future, should you want our office to complete your Financial Statements and Income Tax Returns more efficiently (and hence less cost to you), we recommend the following:</p><ul><li>Ensure that all bank accounts are regularly reconciled, including cheque accounts and credit cards.</li><li>Ensure that all transactions entered into your Xero / MYOB / QuickBooks / XXXX system have accurate descriptions.</li><li>Ensure that all bank statements containing business and investment transactions are provided with detailed description on them.</li><li>Ensure that all private expenses are removed from the business accounts and placed in the appropriate loan account.</li><li>Ensure that your Xero / MYOB / QuickBooks / XXXX file is up to date and contains all adjusting entries prepared by our office.</li><li>Ensure all balance sheet items at year-end are still in existence and are accurately recorded at cost.</li><li>For the next financial year, please ensure that the correct GST codes appear on each transaction.</li></ul>"
+  },
+  {
+    "Title": "Issues & Recommendations - Header",
+    "Category": "Client Communications",
+    "SortOrder": 5,
+    "Content": "<p>The issues listed below highlight problem areas and solutions to make things better. We will discuss these with you on our Annual Review Meeting.</p>"
+  }
+]
