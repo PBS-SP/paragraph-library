@@ -148,5 +148,11 @@
     "Category": "Client Communications",
     "SortOrder": 5,
     "Content": "<p>The issues listed below highlight problem areas and solutions to make things better. We will discuss these with you on our Annual Review Meeting.</p>"
-  }
+  } },
+  {
+  "Title": "Additional Tax on Super for High Income Earners",
+  "Category": "Client Communications",
+  "SortOrder": 45,
+  "Content": "<p>Division 293 tax is an additional tax on super contributions which reduces the tax concession for individuals whose combined annual income and contributions are greater than $250,000.</p><p>If your annual income and super contributions <u>exceeds</u> $250,000, then you are taxed at 15% on either your contributions, or the amount that is over the threshold - whichever amount is lower.</p><p><strong>We estimate you will need to pay $xxx on your superannuation contributions.</strong> The ATO will send you a Division 293 Tax Notice with their assessment of the amount payable after you lodge your annual Tax Return.</p><p>You can pay this Division 293 tax by:</p><ol><li>Payment from your personal bank account, or</li><li>By electing to release money from any of your existing super balances by completing a Division 293 election form.</li></ol>"
+}
 ]
