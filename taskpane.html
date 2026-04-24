@@ -402,35 +402,26 @@ Office.onReady(() => {
   wireUI();
 });
 
-// ── Load from SharePoint ─────────────────────
+// ── Load from Power Automate flow ────────────
 async function loadParagraphs() {
   setStatus("loading", "Loading…");
   try {
-    // Get Office auth token to authenticate with SharePoint
-    const token = await getOfficeToken();
-    
-    const url = `${SHAREPOINT_SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items` +
-                `?$select=Title,Category,Content,SortOrder` +
-                `&$orderby=Category,SortOrder` +
-                `&$top=500`;
+    const FLOW_URL = "https://defaultec90024da2604d5ba05fa070e52fc3.e4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5846643fd107496596d9f159863b4351/triggers/manual/paths/invoke?api-version=1";
 
-    const headers = { 
-      Accept: "application/json;odata=nometadata",
-    };
-    
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const resp = await fetch(url, {
-      headers,
-      credentials: "include",
-      mode: "cors"
+    const resp = await fetch(FLOW_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
     });
 
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-    allParagraphs = data.value;
+    allParagraphs = (data.value || []).map(item => ({
+      Title: item.Title,
+      Category: item.Category,
+      Content: item.Content,
+      SortOrder: item.SortOrder
+    }));
 
     setStatus("ok", "Connected");
     document.getElementById("lastUpdated").textContent =
