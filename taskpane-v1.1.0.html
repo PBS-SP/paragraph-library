@@ -1,0 +1,683 @@
+<!-- PBS Paragraph Library v1.1.0 -->
+<!-- v1.0.0 - Base working version -->
+<!-- v1.1.0 - Added eye expand preview -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PBS Paragraph Library</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f6f3;
+      --surface: #ffffff;
+      --border: #e4e1d9;
+      --border-strong: #c9c4b8;
+      --text: #1a1916;
+      --text-muted: #6b6760;
+      --text-faint: #9e9b95;
+      --accent: #1d4ed8;
+      --accent-light: #eff4ff;
+      --accent-hover: #1e40af;
+      --tag-gst: #d1fae5;
+      --tag-gst-text: #065f46;
+      --tag-legal: #fce7f3;
+      --tag-legal-text: #9d174d;
+      --tag-client: #fef3c7;
+      --tag-client-text: #92400e;
+      --tag-engage: #ede9fe;
+      --tag-engage-text: #5b21b6;
+      --tag-other: #f1f5f9;
+      --tag-other-text: #475569;
+      --success: #059669;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      flex-shrink: 0;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .logo {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo svg { width: 15px; height: 15px; fill: white; }
+    .header-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+    .header-sub { font-size: 11px; color: var(--text-faint); margin-left: auto; font-family: 'DM Mono', monospace; }
+
+    /* ── Search ── */
+    .search-wrap { position: relative; }
+    .search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--text-faint); pointer-events: none;
+    }
+    .search-icon svg { width: 13px; height: 13px; display: block; }
+    #searchInput {
+      width: 100%;
+      padding: 8px 10px 8px 30px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #searchInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(29,78,216,0.1);
+      background: white;
+    }
+    #searchInput::placeholder { color: var(--text-faint); }
+
+    /* ── Category tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px 16px 0;
+      overflow-x: auto;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 7px 12px 9px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+    /* ── Paragraph list ── */
+    .list-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .list-wrap::-webkit-scrollbar { width: 4px; }
+    .list-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-faint);
+    }
+    .empty-state svg { width: 32px; height: 32px; margin: 0 auto 10px; display: block; opacity: 0.4; }
+    .empty-state p { font-size: 12px; }
+
+    .para-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 13px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      position: relative;
+    }
+    .para-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow), 0 0 0 3px rgba(29,78,216,0.07);
+      transform: translateY(-1px);
+    }
+    .para-card:active { transform: translateY(0); }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .card-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      flex: 1;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .tag-gst        { background: var(--tag-gst);    color: var(--tag-gst-text); }
+    .tag-legal      { background: var(--tag-legal);  color: var(--tag-legal-text); }
+    .tag-client     { background: var(--tag-client); color: var(--tag-client-text); }
+    .tag-engagement { background: var(--tag-engage); color: var(--tag-engage-text); }
+    .tag-other      { background: var(--tag-other);  color: var(--tag-other-text); }
+
+    .card-preview {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 9px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .card-chars {
+      font-size: 10px;
+      color: var(--text-faint);
+      font-family: 'DM Mono', monospace;
+    }
+    .insert-btn {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.01em;
+    }
+    .insert-btn:hover { background: var(--accent); color: white; }
+
+    /* ── v1.1.0 Eye expand preview ── */
+    .card-expand-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      color: var(--text-faint);
+      font-size: 13px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .card-expand-btn:hover { color: var(--accent); }
+    .card-expand-btn.open { color: var(--accent); }
+
+    .card-full-preview {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .card-full-preview.visible { display: block; }
+    .card-full-preview p { margin-bottom: 6px; }
+    .card-full-preview p:last-child { margin-bottom: 0; }
+    .card-full-preview table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      margin: 6px 0;
+    }
+    .card-full-preview td, .card-full-preview th {
+      border: 1px solid var(--border);
+      padding: 3px 6px;
+      text-align: left;
+    }
+    .card-full-preview th { background: var(--bg); font-weight: 600; }
+    .card-full-preview ul, .card-full-preview ol { padding-left: 16px; margin: 4px 0; }
+    .card-full-preview li { margin-bottom: 2px; }
+    /* ── end v1.1.0 ── */
+
+    /* ── Insert position toggle ── */
+    .position-bar {
+      padding: 8px 12px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .position-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .position-toggle {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      flex: 1;
+    }
+    .pos-btn {
+      flex: 1;
+      padding: 5px 6px;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s, color 0.15s;
+      text-align: center;
+    }
+    .pos-btn.active { background: var(--surface); color: var(--accent); font-weight: 600; box-shadow: var(--shadow); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--text);
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Loading ── */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status bar ── */
+    .status-bar {
+      padding: 5px 12px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-faint);
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .status-dot.error { background: #ef4444; }
+    .status-dot.loading { background: #f59e0b; animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h5v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
+    </div>
+    <span class="header-title">PBS Paragraph Library</span>
+    <span class="header-sub" id="countBadge">—</span>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+    </span>
+    <input type="text" id="searchInput" placeholder="Search PBS paragraphs…" autocomplete="off"/>
+  </div>
+</div>
+
+<!-- Category tabs -->
+<div class="tabs" id="tabs">
+  <button class="tab active" data-cat="All">All</button>
+  <button class="tab" data-cat="GST / Tax">GST / Tax</button>
+  <button class="tab" data-cat="Legal / Disclaimers">Disclaimers</button>
+  <button class="tab" data-cat="Client Communications">Client Comms</button>
+  <button class="tab" data-cat="Engagement Letters">Engagement</button>
+  <button class="tab" data-cat="Other">Other</button>
+</div>
+
+<!-- Paragraph list -->
+<div class="list-wrap" id="listWrap">
+  <div class="loading"><div class="spinner"></div>Loading library…</div>
+</div>
+
+<!-- Insert position toggle -->
+<div class="position-bar">
+  <span class="position-label">Insert:</span>
+  <div class="position-toggle">
+    <button class="pos-btn active" data-pos="cursor">At cursor</button>
+    <button class="pos-btn" data-pos="end">End of doc</button>
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span><span class="status-dot loading" id="statusDot"></span><span id="statusText">Connecting…</span></span>
+  <span id="lastUpdated"></span>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIGURATION — update these two values
+// ─────────────────────────────────────────────
+const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
+const LIST_NAME           = "ParagraphLibrary";
+// ─────────────────────────────────────────────
+
+let allParagraphs = [];
+let activeCategory = "All";
+let insertPosition = "cursor";
+let searchTerm = "";
+
+// ── Office init ──────────────────────────────
+Office.onReady(() => {
+  loadParagraphs();
+  wireUI();
+});
+
+// ── Load from paragraphs.json ─────────────────
+async function loadParagraphs() {
+  setStatus("loading", "Loading…");
+  try {
+    const resp = await fetch("https://pbs-sp.github.io/paragraph-library/paragraphs.json?v=" + Date.now());
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    allParagraphs = await resp.json();
+
+    setStatus("ok", "Connected");
+    document.getElementById("lastUpdated").textContent =
+      "Updated " + new Date().toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+
+    render();
+  } catch (err) {
+    setStatus("error", "Could not load paragraphs.json");
+    showFallback(err);
+  }
+}
+
+// ── Fallback sample data (for setup/testing) ─
+function showFallback(err) {
+  console.warn("SharePoint error, showing sample data:", err);
+  allParagraphs = SAMPLE_PARAGRAPHS;
+  setStatus("error", "Demo mode — SharePoint not configured");
+  render();
+}
+
+// ── Render paragraph cards ───────────────────
+function render() {
+  const wrap = document.getElementById("listWrap");
+  const filtered = allParagraphs.filter(p => {
+    const matchCat = activeCategory === "All" || p.Category === activeCategory;
+    const matchSearch = !searchTerm ||
+      p.Title.toLowerCase().includes(searchTerm) ||
+      p.Content.toLowerCase().includes(searchTerm) ||
+      (p.Category || "").toLowerCase().includes(searchTerm);
+    return matchCat && matchSearch;
+  });
+
+  document.getElementById("countBadge").textContent =
+    filtered.length + " item" + (filtered.length !== 1 ? "s" : "");
+
+  if (!filtered.length) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p>No paragraphs found</p>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = filtered.map((p, i) => `
+    <div class="para-card" data-index="${i}" title="Click to insert">
+      <div class="card-top">
+        <span class="card-title">${escHtml(p.Title)}</span>
+        <span class="tag ${tagClass(p.Category)}">${escHtml(p.Category || "Other")}</span>
+        <button class="card-expand-btn" data-index="${i}" title="Preview">👁</button>
+      </div>
+      <div class="card-preview">${escHtml(stripHtml(p.Content))}</div>
+      <div class="card-full-preview" id="preview-${i}"></div>
+      <div class="card-footer">
+        <span class="card-chars">${stripHtml(p.Content).length} chars</span>
+        <button class="insert-btn" data-index="${i}">Insert ↵</button>
+      </div>
+    </div>
+  `).join("");
+
+  // Store filtered for click lookup
+  wrap._filtered = filtered;
+
+  // Insert button events
+  wrap.querySelectorAll(".insert-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      insertParagraph(wrap._filtered[+btn.dataset.index]);
+    });
+  });
+
+  // Card click — insert (ignore clicks on expand btn)
+  wrap.querySelectorAll(".para-card").forEach(card => {
+    card.addEventListener("click", e => {
+      if (e.target.closest(".card-expand-btn")) return;
+      insertParagraph(wrap._filtered[+card.dataset.index]);
+    });
+  });
+
+  // v1.1.0 — Eye expand button events
+  wrap.querySelectorAll(".card-expand-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      togglePreview(+btn.dataset.index, wrap._filtered[+btn.dataset.index]);
+    });
+  });
+}
+
+// ── v1.1.0 Expand preview ─────────────────────
+function togglePreview(index, para) {
+  const preview = document.getElementById("preview-" + index);
+  const btn = document.querySelector(".card-expand-btn[data-index='" + index + "']");
+  const isOpen = preview.classList.contains("visible");
+
+  // Close all others first
+  document.querySelectorAll(".card-full-preview").forEach(el => el.classList.remove("visible"));
+  document.querySelectorAll(".card-expand-btn").forEach(el => el.classList.remove("open"));
+
+  if (!isOpen) {
+    preview.innerHTML = para.Content;
+    preview.classList.add("visible");
+    btn.classList.add("open");
+  }
+}
+
+// ── Insert into Word ─────────────────────────
+function insertParagraph(para) {
+  const html =
+    `<html><body>` +
+    `<p style="font-family:Aptos,Calibri,sans-serif;font-size:14pt;font-weight:bold;color:#000000;margin:0 0 6pt 0;">${escHtml(para.Title)}</p>` +
+    `<div style="font-family:Aptos,Calibri,sans-serif;font-size:11pt;color:#000000;">${para.Content}</div>` +
+    `</body></html>`;
+
+  const insertType = Office.CoercionType.Html;
+  const options = { coercionType: insertType, asyncContext: para.Title };
+
+  if (insertPosition === "cursor") {
+    Office.context.document.setSelectedDataAsync(html, options, result => {
+      if (result.status === Office.AsyncResultStatus.Succeeded) {
+        showToast("✓ Inserted: " + para.Title);
+      } else {
+        showToast("⚠ Insert failed — is Word open?");
+        console.error(result.error);
+      }
+    });
+  } else {
+    Word.run(async ctx => {
+      const body = ctx.document.body;
+      const endRange = body.getRange(Word.RangeLocation.end);
+      endRange.select();
+      await ctx.sync();
+      Office.context.document.setSelectedDataAsync(html, options, result => {
+        if (result.status === Office.AsyncResultStatus.Succeeded) {
+          showToast("✓ Inserted: " + para.Title);
+        } else {
+          showToast("⚠ Insert failed — is Word open?");
+          console.error(result.error);
+        }
+      });
+    });
+  }
+}
+
+// ── Wire up UI events ────────────────────────
+function wireUI() {
+  document.getElementById("searchInput").addEventListener("input", e => {
+    searchTerm = e.target.value.toLowerCase().trim();
+    render();
+  });
+
+  document.getElementById("tabs").addEventListener("click", e => {
+    const tab = e.target.closest(".tab");
+    if (!tab) return;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    activeCategory = tab.dataset.cat;
+    render();
+  });
+
+  document.querySelectorAll(".pos-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".pos-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      insertPosition = btn.dataset.pos;
+    });
+  });
+}
+
+// ── Helpers ──────────────────────────────────
+function tagClass(cat) {
+  const map = {
+    "GST / Tax": "tag-gst",
+    "Legal / Disclaimers": "tag-legal",
+    "Client Communications": "tag-client",
+    "Engagement Letters": "tag-engagement"
+  };
+  return map[cat] || "tag-other";
+}
+
+function escHtml(str) {
+  return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function stripHtml(str) {
+  return (str || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function setStatus(state, msg) {
+  const dot = document.getElementById("statusDot");
+  dot.className = "status-dot " + (state === "ok" ? "" : state);
+  document.getElementById("statusText").textContent = msg;
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// ── Sample data (fallback only) ──
+const SAMPLE_PARAGRAPHS = [
+  { Title: "GST General Disclaimer", Category: "GST / Tax",
+    Content: "This information is of a general nature only and should not be relied upon as tax advice. Please consult a registered tax agent in relation to your specific circumstances." },
+  { Title: "Financial Acquisitions Threshold", Category: "GST / Tax",
+    Content: "Where an SMSF exceeds the financial acquisitions threshold, the fund may only claim reduced input tax credits (RITCs) of 75% on eligible reduced credit acquisitions. Tax, audit, and accounting fees are excluded from reduced credit acquisitions and no GST credits can be claimed on these costs." },
+  { Title: "Commercial Property GST Note", Category: "GST / Tax",
+    Content: "Commercial rental income is a taxable supply for GST purposes. Where an SMSF derives commercial rental income exceeding $75,000 per annum, the fund is required to register for GST and remit GST on rental income via its Business Activity Statement." },
+  { Title: "General Advice Warning", Category: "Legal / Disclaimers",
+    Content: "The information contained in this document is general in nature and does not take into account your personal circumstances, financial situation or needs. Before acting on any information, you should consider its appropriateness having regard to your objectives, financial situation and needs." },
+  { Title: "Confidentiality Notice", Category: "Legal / Disclaimers",
+    Content: "This document is confidential and intended solely for the use of the individual or entity to whom it is addressed. If you have received this document in error, please notify the sender immediately and destroy all copies." },
+  { Title: "Fee Agreement Clause", Category: "Engagement Letters",
+    Content: "Our fees are calculated on a time-cost basis at the rates set out in our current fee schedule, unless a fixed fee arrangement has been agreed in writing. Invoices are payable within 14 days of the invoice date. We reserve the right to suspend services where invoices remain outstanding." },
+  { Title: "Scope Limitation", Category: "Engagement Letters",
+    Content: "Our engagement is limited to the scope of services described in this letter. We will not be responsible for identifying matters outside this scope unless separately engaged to do so." },
+  { Title: "Document Request – Standard", Category: "Client Communications",
+    Content: "To enable us to complete your work, please provide the documents listed below at your earliest convenience. If you have any questions about what is required, please do not hesitate to contact our office." },
+  { Title: "Matter Complete Confirmation", Category: "Client Communications",
+    Content: "We are pleased to advise that the above matter has now been completed. Please do not hesitate to contact us should you have any questions regarding this matter or require any further assistance." },
+];
+</script>
+</body>
+</html>
