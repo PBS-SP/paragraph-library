@@ -1,6 +1,8 @@
-<!-- PBS Paragraph Library v1.1.0 -->
+<!-- PBS Paragraph Library v1.1.2 -->
 <!-- v1.0.0 - Base working version -->
 <!-- v1.1.0 - Added eye expand preview -->
+<!-- v1.1.1 - Increased inserted heading font size from 14pt to 16pt -->
+<!-- v1.1.2 - Show version number in status bar -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -431,6 +433,10 @@
 
 <script>
 // ─────────────────────────────────────────────
+//  VERSION
+// ─────────────────────────────────────────────
+const VERSION = "v1.1.2";
+// ─────────────────────────────────────────────
 //  CONFIGURATION — update these two values
 // ─────────────────────────────────────────────
 const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
@@ -458,7 +464,7 @@ async function loadParagraphs() {
 
     setStatus("ok", "Connected");
     document.getElementById("lastUpdated").textContent =
-      "Updated " + new Date().toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+      VERSION + " · " + new Date().toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
 
     render();
   } catch (err) {
@@ -566,7 +572,7 @@ function togglePreview(index, para) {
 function insertParagraph(para) {
   const html =
     `<html><body>` +
-    `<p style="font-family:Aptos,Calibri,sans-serif;font-size:14pt;font-weight:bold;color:#000000;margin:0 0 6pt 0;">${escHtml(para.Title)}</p>` +
+    `<p style="font-family:Aptos,Calibri,sans-serif;font-size:16pt;font-weight:bold;color:#000000;margin:0 0 6pt 0;">${escHtml(para.Title)}</p>` +
     `<div style="font-family:Aptos,Calibri,sans-serif;font-size:11pt;color:#000000;">${para.Content}</div>` +
     `</body></html>`;
 
