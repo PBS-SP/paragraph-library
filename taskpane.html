@@ -461,7 +461,7 @@ Office.onReady(() => {
 async function loadParagraphs() {
   setStatus("loading", "Loading…");
   try {
-    const resp = await fetch("paragraphs.json?v=" + Date.now());
+    const resp = await fetch("https://pbs-sp.github.io/paragraph-library/paragraphs.json?v=" + Date.now());
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     allParagraphs = await resp.json();
 
