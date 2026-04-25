@@ -1,3 +1,6 @@
+<!-- PBS Paragraph Library v1.1.0 -->
+<!-- v1.0.0 - Base working version -->
+<!-- v1.1.0 - Added eye expand preview -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -230,54 +233,48 @@
     }
     .insert-btn:hover { background: var(--accent); color: white; }
 
-    /* ── Hover preview popup ── */
-    .preview-popup {
+    /* ── v1.1.0 Eye expand preview ── */
+    .card-expand-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      color: var(--text-faint);
+      font-size: 13px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .card-expand-btn:hover { color: var(--accent); }
+    .card-expand-btn.open { color: var(--accent); }
+
+    .card-full-preview {
       display: none;
-      position: fixed;
-      z-index: 999;
-      background: var(--surface);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
-      padding: 14px 16px;
-      width: 320px;
-      max-height: 420px;
-      overflow-y: auto;
-      pointer-events: none;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
-    .preview-popup.visible { display: block; }
-    .preview-popup-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-      letter-spacing: -0.01em;
-    }
-    .preview-popup-body {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
       font-size: 11px;
       color: var(--text-muted);
       line-height: 1.6;
     }
-    .preview-popup-body p { margin-bottom: 6px; }
-    .preview-popup-body p:last-child { margin-bottom: 0; }
-    .preview-popup-body table {
+    .card-full-preview.visible { display: block; }
+    .card-full-preview p { margin-bottom: 6px; }
+    .card-full-preview p:last-child { margin-bottom: 0; }
+    .card-full-preview table {
       width: 100%;
       border-collapse: collapse;
       font-size: 10.5px;
       margin: 6px 0;
     }
-    .preview-popup-body td, .preview-popup-body th {
+    .card-full-preview td, .card-full-preview th {
       border: 1px solid var(--border);
       padding: 3px 6px;
       text-align: left;
     }
-    .preview-popup-body th { background: var(--bg); font-weight: 600; }
-    .preview-popup-body ul, .preview-popup-body ol { padding-left: 16px; margin: 4px 0; }
-    .preview-popup-body li { margin-bottom: 2px; }
+    .card-full-preview th { background: var(--bg); font-weight: 600; }
+    .card-full-preview ul, .card-full-preview ol { padding-left: 16px; margin: 4px 0; }
+    .card-full-preview li { margin-bottom: 2px; }
+    /* ── end v1.1.0 ── */
 
     /* ── Insert position toggle ── */
     .position-bar {
@@ -429,12 +426,6 @@
   <span id="lastUpdated"></span>
 </div>
 
-<!-- Hover preview popup -->
-<div class="preview-popup" id="previewPopup">
-  <div class="preview-popup-title" id="previewTitle"></div>
-  <div class="preview-popup-body" id="previewBody"></div>
-</div>
-
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -515,8 +506,10 @@ function render() {
       <div class="card-top">
         <span class="card-title">${escHtml(p.Title)}</span>
         <span class="tag ${tagClass(p.Category)}">${escHtml(p.Category || "Other")}</span>
+        <button class="card-expand-btn" data-index="${i}" title="Preview">👁</button>
       </div>
       <div class="card-preview">${escHtml(stripHtml(p.Content))}</div>
+      <div class="card-full-preview" id="preview-${i}"></div>
       <div class="card-footer">
         <span class="card-chars">${stripHtml(p.Content).length} chars</span>
         <button class="insert-btn" data-index="${i}">Insert ↵</button>
@@ -527,33 +520,50 @@ function render() {
   // Store filtered for click lookup
   wrap._filtered = filtered;
 
-  // Attach click events
+  // Insert button events
   wrap.querySelectorAll(".insert-btn").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
       insertParagraph(wrap._filtered[+btn.dataset.index]);
     });
   });
+
+  // Card click — insert (ignore clicks on expand btn)
   wrap.querySelectorAll(".para-card").forEach(card => {
-    card.addEventListener("click", () => {
+    card.addEventListener("click", e => {
+      if (e.target.closest(".card-expand-btn")) return;
       insertParagraph(wrap._filtered[+card.dataset.index]);
     });
+  });
 
-    // Hover preview
-    card.addEventListener("mouseenter", e => {
-      const para = wrap._filtered[+card.dataset.index];
-      showPreview(para, card);
-    });
-    card.addEventListener("mouseleave", () => {
-      hidePreview();
+  // v1.1.0 — Eye expand button events
+  wrap.querySelectorAll(".card-expand-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      togglePreview(+btn.dataset.index, wrap._filtered[+btn.dataset.index]);
     });
   });
 }
 
+// ── v1.1.0 Expand preview ─────────────────────
+function togglePreview(index, para) {
+  const preview = document.getElementById("preview-" + index);
+  const btn = document.querySelector(".card-expand-btn[data-index='" + index + "']");
+  const isOpen = preview.classList.contains("visible");
+
+  // Close all others first
+  document.querySelectorAll(".card-full-preview").forEach(el => el.classList.remove("visible"));
+  document.querySelectorAll(".card-expand-btn").forEach(el => el.classList.remove("open"));
+
+  if (!isOpen) {
+    preview.innerHTML = para.Content;
+    preview.classList.add("visible");
+    btn.classList.add("open");
+  }
+}
+
 // ── Insert into Word ─────────────────────────
 function insertParagraph(para) {
-  // Build HTML with heading + body, wrapped in Aptos 11pt styling.
-  // Word's native HTML importer preserves bold, italic, bullets etc.
   const html =
     `<html><body>` +
     `<p style="font-family:Aptos,Calibri,sans-serif;font-size:14pt;font-weight:bold;color:#000000;margin:0 0 6pt 0;">${escHtml(para.Title)}</p>` +
@@ -561,10 +571,7 @@ function insertParagraph(para) {
     `</body></html>`;
 
   const insertType = Office.CoercionType.Html;
-  const options = {
-    coercionType: insertType,
-    asyncContext: para.Title,
-  };
+  const options = { coercionType: insertType, asyncContext: para.Title };
 
   if (insertPosition === "cursor") {
     Office.context.document.setSelectedDataAsync(html, options, result => {
@@ -576,13 +583,11 @@ function insertParagraph(para) {
       }
     });
   } else {
-    // Move selection to end of document then insert
     Word.run(async ctx => {
       const body = ctx.document.body;
       const endRange = body.getRange(Word.RangeLocation.end);
       endRange.select();
       await ctx.sync();
-
       Office.context.document.setSelectedDataAsync(html, options, result => {
         if (result.status === Office.AsyncResultStatus.Succeeded) {
           showToast("✓ Inserted: " + para.Title);
@@ -597,13 +602,11 @@ function insertParagraph(para) {
 
 // ── Wire up UI events ────────────────────────
 function wireUI() {
-  // Search
   document.getElementById("searchInput").addEventListener("input", e => {
     searchTerm = e.target.value.toLowerCase().trim();
     render();
   });
 
-  // Category tabs
   document.getElementById("tabs").addEventListener("click", e => {
     const tab = e.target.closest(".tab");
     if (!tab) return;
@@ -613,7 +616,6 @@ function wireUI() {
     render();
   });
 
-  // Position toggle
   document.querySelectorAll(".pos-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".pos-btn").forEach(b => b.classList.remove("active"));
@@ -621,43 +623,6 @@ function wireUI() {
       insertPosition = btn.dataset.pos;
     });
   });
-}
-
-// ── Hover preview ─────────────────────────────
-let previewTimer = null;
-
-function showPreview(para, cardEl) {
-  clearTimeout(previewTimer);
-  previewTimer = setTimeout(() => {
-    const popup = document.getElementById("previewPopup");
-    document.getElementById("previewTitle").textContent = para.Title;
-    document.getElementById("previewBody").innerHTML = para.Content;
-
-    // Position popup to the right of the card, or left if near edge
-    const rect = cardEl.getBoundingClientRect();
-    const popupWidth = 320;
-    const viewportWidth = window.innerWidth;
-    const spaceRight = viewportWidth - rect.right;
-
-    let left, top;
-    if (spaceRight >= popupWidth + 12) {
-      left = rect.right + 8;
-    } else {
-      left = rect.left - popupWidth - 8;
-    }
-
-    top = Math.min(rect.top, window.innerHeight - 440);
-    top = Math.max(top, 8);
-
-    popup.style.left = left + "px";
-    popup.style.top = top + "px";
-    popup.classList.add("visible");
-  }, 400); // 400ms delay before showing
-}
-
-function hidePreview() {
-  clearTimeout(previewTimer);
-  document.getElementById("previewPopup").classList.remove("visible");
 }
 
 // ── Helpers ──────────────────────────────────
@@ -692,7 +657,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2200);
 }
 
-// ── Sample data (used if SharePoint not yet configured) ──
+// ── Sample data (fallback only) ──
 const SAMPLE_PARAGRAPHS = [
   { Title: "GST General Disclaimer", Category: "GST / Tax",
     Content: "This information is of a general nature only and should not be relied upon as tax advice. Please consult a registered tax agent in relation to your specific circumstances." },
