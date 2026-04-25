@@ -230,6 +230,55 @@
     }
     .insert-btn:hover { background: var(--accent); color: white; }
 
+    /* ── Hover preview popup ── */
+    .preview-popup {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
+      padding: 14px 16px;
+      width: 320px;
+      max-height: 420px;
+      overflow-y: auto;
+      pointer-events: none;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .preview-popup.visible { display: block; }
+    .preview-popup-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+    }
+    .preview-popup-body {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .preview-popup-body p { margin-bottom: 6px; }
+    .preview-popup-body p:last-child { margin-bottom: 0; }
+    .preview-popup-body table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      margin: 6px 0;
+    }
+    .preview-popup-body td, .preview-popup-body th {
+      border: 1px solid var(--border);
+      padding: 3px 6px;
+      text-align: left;
+    }
+    .preview-popup-body th { background: var(--bg); font-weight: 600; }
+    .preview-popup-body ul, .preview-popup-body ol { padding-left: 16px; margin: 4px 0; }
+    .preview-popup-body li { margin-bottom: 2px; }
+
     /* ── Insert position toggle ── */
     .position-bar {
       padding: 8px 12px;
@@ -380,6 +429,12 @@
   <span id="lastUpdated"></span>
 </div>
 
+<!-- Hover preview popup -->
+<div class="preview-popup" id="previewPopup">
+  <div class="preview-popup-title" id="previewTitle"></div>
+  <div class="preview-popup-body" id="previewBody"></div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -483,6 +538,15 @@ function render() {
     card.addEventListener("click", () => {
       insertParagraph(wrap._filtered[+card.dataset.index]);
     });
+
+    // Hover preview
+    card.addEventListener("mouseenter", e => {
+      const para = wrap._filtered[+card.dataset.index];
+      showPreview(para, card);
+    });
+    card.addEventListener("mouseleave", () => {
+      hidePreview();
+    });
   });
 }
 
@@ -557,6 +621,43 @@ function wireUI() {
       insertPosition = btn.dataset.pos;
     });
   });
+}
+
+// ── Hover preview ─────────────────────────────
+let previewTimer = null;
+
+function showPreview(para, cardEl) {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => {
+    const popup = document.getElementById("previewPopup");
+    document.getElementById("previewTitle").textContent = para.Title;
+    document.getElementById("previewBody").innerHTML = para.Content;
+
+    // Position popup to the right of the card, or left if near edge
+    const rect = cardEl.getBoundingClientRect();
+    const popupWidth = 320;
+    const viewportWidth = window.innerWidth;
+    const spaceRight = viewportWidth - rect.right;
+
+    let left, top;
+    if (spaceRight >= popupWidth + 12) {
+      left = rect.right + 8;
+    } else {
+      left = rect.left - popupWidth - 8;
+    }
+
+    top = Math.min(rect.top, window.innerHeight - 440);
+    top = Math.max(top, 8);
+
+    popup.style.left = left + "px";
+    popup.style.top = top + "px";
+    popup.classList.add("visible");
+  }, 400); // 400ms delay before showing
+}
+
+function hidePreview() {
+  clearTimeout(previewTimer);
+  document.getElementById("previewPopup").classList.remove("visible");
 }
 
 // ── Helpers ──────────────────────────────────
