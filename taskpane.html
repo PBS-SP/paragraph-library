@@ -14,6 +14,10 @@
               H4 subheadings in content respected in both insert paths -->
 <!-- v2.1.1 - H3/H4 styled in eye preview panel; card preview text unaffected -->
 <!-- v2.1.2 - Modified date shown in card footer next to word count -->
+<!-- v2.2.0 - Full Word.run paragraph-by-paragraph insert for doc style ON;
+              content parser splits on h4/p/ul/ol/table segments;
+              Heading 3 (title), Heading 4 (subheadings), Normal (body/lists), table via insertHtml;
+              doc style OFF uses robust Aptos inline CSS: 16pt bold title, 12pt bold H4, 11pt body -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -439,84 +443,207 @@ function insertParagraph(para) {
   if (isOutlook) { insertOutlook(para); } else { insertWord(para); }
 }
 
+// ── Word insert ───────────────────────────────────────────────────────────────
+
 function insertWord(para) {
-  if (includeHeading && useDocStyle) {
-    // Insert title as Heading 3 via Word JS API, then body content
-    Word.run(async ctx => {
-      const body = ctx.document.body;
-      let range;
-      if (insertPosition === "end") {
-        range = body.getRange(Word.RangeLocation.end);
-      } else {
-        range = ctx.document.getSelection();
-        range.collapse(false); // move to end of selection
-      }
-      // Insert heading paragraph with Heading 3 style
-      const headingPara = range.insertParagraph(para.Title, Word.InsertLocation.after);
-      headingPara.styleBuiltIn = Word.BuiltInStyleName.heading3;
-      // Insert body HTML after heading — convert H4s to Heading 4 style paragraphs
-      const bodyHtml = buildWordHtml(para.Content, true);
-      headingPara.insertHtml(bodyHtml, Word.InsertLocation.after);
-      await ctx.sync();
-      showToast("✓ Inserted: " + para.Title);
-      addRecent(para.Title);
-    }).catch(() => {
-      // Fallback to inline if Word JS API fails
-      insertWordInline(para);
-    });
+  if (useDocStyle) {
+    insertWordDocStyle(para);
   } else {
     insertWordInline(para);
   }
 }
 
+// ── Doc style ON: Word.run paragraph-by-paragraph ────────────────────────────
+// Segments content into h4 / p / ul / ol / table blocks and inserts each
+// with the correct built-in Word style. Tables use insertHtml as a safe fallback.
+
+function insertWordDocStyle(para) {
+  Word.run(async ctx => {
+    // Determine anchor range
+    let anchor;
+    if (insertPosition === "end") {
+      anchor = ctx.document.body.getRange(Word.RangeLocation.end);
+    } else {
+      anchor = ctx.document.getSelection();
+      anchor.collapse(false);
+    }
+    await ctx.sync();
+
+    // Parse content into ordered segments
+    const segments = parseContentSegments(para.Content);
+
+    // Build insert list: prepend title heading if toggle is on
+    const insertList = [];
+    if (includeHeading) {
+      insertList.push({ type: "h3", text: para.Title });
+    }
+    insertList.push(...segments);
+
+    // Insert segments in reverse order (each inserted "after" anchor,
+    // so reversing gives correct final reading order)
+    for (let i = insertList.length - 1; i >= 0; i--) {
+      const seg = insertList[i];
+
+      if (seg.type === "table") {
+        // Tables: insertHtml after anchor — Word renders the table natively
+        anchor.insertHtml(seg.html, Word.InsertLocation.after);
+
+      } else if (seg.type === "ul" || seg.type === "ol") {
+        // Lists: insert each item as a List Paragraph, reversed within the list
+        const items = seg.items.slice().reverse();
+        for (const itemHtml of items) {
+          const p = anchor.insertParagraph(stripHtml(itemHtml), Word.InsertLocation.after);
+          p.styleBuiltIn = Word.BuiltInStyleName.listParagraph;
+          if (seg.type === "ol") {
+            p.listItem.level = 0;
+          }
+        }
+
+      } else if (seg.type === "h4") {
+        const p = anchor.insertParagraph(stripHtml(seg.html), Word.InsertLocation.after);
+        p.styleBuiltIn = Word.BuiltInStyleName.heading4;
+
+      } else if (seg.type === "h3") {
+        const p = anchor.insertParagraph(seg.text || stripHtml(seg.html || ""), Word.InsertLocation.after);
+        p.styleBuiltIn = Word.BuiltInStyleName.heading3;
+
+      } else {
+        // p and everything else → Normal style
+        // Preserve inline formatting (bold, italic, spans) via insertHtml
+        const p = anchor.insertParagraph("", Word.InsertLocation.after);
+        p.styleBuiltIn = Word.BuiltInStyleName.normal;
+        if (seg.html && seg.html.trim()) {
+          p.insertHtml(seg.html, Word.InsertLocation.replace);
+        }
+      }
+    }
+
+    await ctx.sync();
+    showToast("✓ Inserted: " + para.Title);
+    addRecent(para.Title);
+
+  }).catch(err => {
+    console.error("Doc style insert failed, falling back to inline:", err);
+    insertWordInline(para);
+  });
+}
+
+// ── Inline (doc style OFF): setSelectedDataAsync with Aptos inline CSS ───────
+// Title: 16pt bold | H4 subheadings: 12pt bold | Body/lists/tables: 11pt
+
 function insertWordInline(para) {
-  // Build HTML: optional bold 16pt heading + body with H4s as bold inline
+  const FONT = "Aptos, Calibri, sans-serif";
+  const COLOR = "#000000";
+
+  // Convert H4 tags to 12pt bold inline paragraphs
+  const bodyHtml = para.Content.replace(
+    /<h4[^>]*>([\s\S]*?)<\/h4>/gi,
+    `<p style="font-family:${FONT};font-size:12pt;font-weight:bold;color:${COLOR};margin:6pt 0 2pt 0;">$1</p>`
+  );
+
+  // Wrap entire body in 11pt Aptos so all p/ul/ol/table inherit it
+  const wrappedBody =
+    `<div style="font-family:${FONT};font-size:11pt;color:${COLOR};">` +
+    bodyHtml +
+    `</div>`;
+
   let html = "<html><body>";
   if (includeHeading) {
-    html += `<p style="font-family:Aptos,Calibri,sans-serif;font-size:16pt;font-weight:bold;color:#000000;margin:0 0 6pt 0;">${escHtml(para.Title)}</p>`;
+    html += `<p style="font-family:${FONT};font-size:16pt;font-weight:bold;color:${COLOR};margin:0 0 6pt 0;">${escHtml(para.Title)}</p>`;
   }
-  html += `<div style="font-family:Aptos,Calibri,sans-serif;font-size:11pt;color:#000000;">${buildWordHtml(para.Content, false)}</div>`;
-  html += "</body></html>";
-  const opts = { coercionType: Office.CoercionType.Html, asyncContext: para.Title };
-  const doInsert = () => Office.context.document.setSelectedDataAsync(html, opts, r => {
-    if (r.status === Office.AsyncResultStatus.Succeeded) { showToast("✓ Inserted: "+para.Title); addRecent(para.Title); }
-    else showToast("⚠ Insert failed — is Word open?");
-  });
-  if (insertPosition === "cursor") { doInsert(); }
-  else { Word.run(async ctx => { ctx.document.body.getRange(Word.RangeLocation.end).select(); await ctx.sync(); doInsert(); }); }
+  html += wrappedBody + "</body></html>";
+
+  const opts = { coercionType: Office.CoercionType.Html };
+  const doInsert = () => {
+    Office.context.document.setSelectedDataAsync(html, opts, r => {
+      if (r.status === Office.AsyncResultStatus.Succeeded) {
+        showToast("✓ Inserted: " + para.Title);
+        addRecent(para.Title);
+      } else {
+        showToast("⚠ Insert failed — is Word open?");
+        console.error(r.error);
+      }
+    });
+  };
+
+  if (insertPosition === "cursor") {
+    doInsert();
+  } else {
+    Word.run(async ctx => {
+      ctx.document.body.getRange(Word.RangeLocation.end).select();
+      await ctx.sync();
+      doInsert();
+    });
+  }
 }
 
-function buildWordHtml(content, forDocStyle) {
-  if (forDocStyle) {
-    // When using doc styles, leave H4s as-is — Word will map them to Heading 4 style
-    return content;
-  } else {
-    // Replace H4 tags with bold inline paragraphs matching the 11pt body style
-    return content
-      .replace(/<h4[^>]*>(.*?)<\/h4>/gi,
-        '<p style="font-family:Aptos,Calibri,sans-serif;font-size:11pt;font-weight:bold;color:#000000;margin:6pt 0 3pt 0;">$1</p>');
-  }
+// ── Content parser ────────────────────────────────────────────────────────────
+// Splits HTML content string into typed segments for Word.run insertion.
+// Returns array of: { type: "p"|"h4"|"ul"|"ol"|"table", html, items? }
+
+function parseContentSegments(html) {
+  // Use a temporary DOM element to parse the HTML reliably
+  const div = document.createElement("div");
+  div.innerHTML = html;
+
+  const segments = [];
+
+  div.childNodes.forEach(node => {
+    if (node.nodeType !== 1) return; // skip text nodes
+    const tag = node.tagName.toLowerCase();
+
+    if (tag === "h4") {
+      segments.push({ type: "h4", html: node.innerHTML });
+
+    } else if (tag === "ul" || tag === "ol") {
+      const items = Array.from(node.querySelectorAll("li")).map(li => li.innerHTML);
+      if (items.length) segments.push({ type: tag, items });
+
+    } else if (tag === "table") {
+      segments.push({ type: "table", html: node.outerHTML });
+
+    } else {
+      // p, div, and anything else treated as body paragraph
+      const inner = node.innerHTML.trim();
+      if (inner) segments.push({ type: "p", html: inner });
+    }
+  });
+
+  return segments;
 }
+
+// ── Outlook insert ────────────────────────────────────────────────────────────
+// H4s → plain bold, no imposed font sizes — merges with email compose font.
 
 function insertOutlook(para) {
-  // Strip H4s to plain bold paragraphs — merges cleanly with email font
   const cleanContent = para.Content
-    .replace(/<h4[^>]*>(.*?)<\/h4>/gi, '<p><strong>$1</strong></p>')
-    .replace(/(<p[^>]*?)style="[^"]*font-size:\s*12pt[^"]*font-weight:\s*bold[^"]*"([^>]*>)/gi, '$1style="font-weight:bold;"$2')
-    .replace(/(<p[^>]*?)style="[^"]*font-weight:\s*bold[^"]*font-size:\s*12pt[^"]*"([^>]*>)/gi, '$1style="font-weight:bold;"$2');
+    .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "<p><strong>$1</strong></p>");
+
   let html = "";
   if (includeHeading) html += `<p><strong>${escHtml(para.Title)}</strong></p>`;
   html += cleanContent;
-  Office.context.mailbox.item.body.setSelectedDataAsync(html, { coercionType: Office.CoercionType.Html }, r => {
-    if (r.status === Office.AsyncResultStatus.Succeeded) { showToast("✓ Inserted: "+para.Title); }
-    else {
-      Office.context.mailbox.item.body.setSelectedDataAsync(
-        (includeHeading ? para.Title+"\n\n" : "") + stripHtml(para.Content),
-        { coercionType: Office.CoercionType.Text },
-        r2 => { showToast(r2.status === Office.AsyncResultStatus.Succeeded ? "✓ Inserted as plain text" : "⚠ Insert failed — is a compose window open?"); }
-      );
+
+  Office.context.mailbox.item.body.setSelectedDataAsync(
+    html,
+    { coercionType: Office.CoercionType.Html },
+    r => {
+      if (r.status === Office.AsyncResultStatus.Succeeded) {
+        showToast("✓ Inserted: " + para.Title);
+      } else {
+        // Fallback: plain text
+        const plain = (includeHeading ? para.Title + "\n\n" : "") + stripHtml(para.Content);
+        Office.context.mailbox.item.body.setSelectedDataAsync(
+          plain,
+          { coercionType: Office.CoercionType.Text },
+          r2 => {
+            showToast(r2.status === Office.AsyncResultStatus.Succeeded
+              ? "✓ Inserted as plain text"
+              : "⚠ Insert failed — is a compose window open?");
+          }
+        );
+      }
     }
-  });
+  );
 }
 
 function addRecent(title) {
