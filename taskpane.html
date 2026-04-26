@@ -12,6 +12,8 @@
 <!-- v2.1.0 - Heading toggle visible in both hosts (Word default on, Outlook default off);
               Word-only "Match doc style" second toggle (H3 via Word JS API vs bold inline);
               H4 subheadings in content respected in both insert paths -->
+<!-- v2.1.1 - H3/H4 styled in eye preview panel; card preview text unaffected -->
+<!-- v2.1.2 - Modified date shown in card footer next to word count -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,6 +101,10 @@
     .card-full-preview th { background:var(--bg); font-weight:600; }
     .card-full-preview ul,.card-full-preview ol { padding-left:14px; margin:3px 0; }
     .card-full-preview li { margin-bottom:2px; }
+    /* H3 = paragraph title level — shown in preview when content contains h3 */
+    .card-full-preview h3 { font-size:12px; font-weight:700; color:var(--accent); letter-spacing:-0.01em; margin:8px 0 3px; padding-bottom:3px; border-bottom:1px solid #c8e2d0; line-height:1.3; }
+    /* H4 = subheading level within content */
+    .card-full-preview h4 { font-size:11px; font-weight:700; color:var(--text); letter-spacing:-0.01em; margin:6px 0 2px; line-height:1.3; }
 
     /* Card footer */
     .card-footer { display:flex; align-items:center; justify-content:space-between; margin-top:7px; padding-top:7px; border-top:1px solid var(--border); gap:5px; }
@@ -391,6 +397,7 @@ function render() {
     const p = seg.para; const i = pIdx++;
     const hasWarn = PLACEHOLDER_RE.test(stripHtml(p.Content)+" "+p.Title);
     const wc = wordCount(p.Content);
+    const mod = p.Modified ? ` · ${p.Modified}` : "";
     html += `<div class="para-card${seg.letterOnly?" letter-only":""}" data-index="${i}" tabindex="-1" style="animation-delay:${Math.min(i*0.03,0.25)}s">
       <div class="card-top">
         <span class="card-title">${escHtml(p.Title)}</span>
@@ -402,7 +409,7 @@ function render() {
       <div class="card-preview">${escHtml(stripHtml(p.Content))}</div>
       <div class="card-full-preview" id="preview-${i}"></div>
       <div class="card-footer">
-        <span class="card-meta">${wc} words</span>
+        <span class="card-meta">${wc} words${mod}</span>
         <div class="card-actions">
           <button class="insert-btn" data-index="${i}">Insert ↵</button>
         </div>
