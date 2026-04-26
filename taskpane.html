@@ -1,4 +1,4 @@
-<!-- PBS Paragraph Library v1.2.1 -->
+<!-- PBS Paragraph Library v2.0.0 -->
 <!-- v1.0.0 - Base working version -->
 <!-- v1.1.0 - Added eye expand preview -->
 <!-- v1.1.1 - Increased inserted heading font size from 14pt to 16pt -->
@@ -7,6 +7,8 @@
               SortOrder applied; A-Z toggle; recently used; copy to clipboard; keyboard nav;
               smooth animations; word count; placeholder warning badge; Escape clears search -->
 <!-- v1.2.1 - Categories moved above paragraph list as wrapping pill grid; removed Copy button -->
+<!-- v2.0.0 - Unified Word + Outlook single file; host-detected insert; Outlook: Email/All mode,
+              heading toggle in header, prose-merge insert, letter-only soft divider -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -124,6 +126,36 @@
     .loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; gap:10px; color:var(--text-muted); font-size:12px; }
     .spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── v2.0.0 Outlook/unified additions ── */
+    /* Host badge */
+    .host-badge { font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent); background:var(--accent-light); padding:2px 6px; border-radius:20px; border:1px solid #c8e2d0; display:none; }
+
+    /* Heading toggle — Outlook only, hidden by default */
+    .heading-toggle-wrap { display:none; align-items:center; gap:5px; }
+    .heading-label { font-size:10.5px; color:var(--text-muted); font-weight:500; white-space:nowrap; }
+    .toggle-switch { position:relative; width:30px; height:17px; flex-shrink:0; }
+    .toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+    .toggle-track { position:absolute; inset:0; background:var(--border-strong); border-radius:17px; cursor:pointer; transition:background 0.2s; }
+    .toggle-track::after { content:''; position:absolute; width:11px; height:11px; left:3px; top:3px; background:white; border-radius:50%; transition:transform 0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.15); }
+    .toggle-switch input:checked + .toggle-track { background:var(--accent); }
+    .toggle-switch input:checked + .toggle-track::after { transform:translateX(13px); }
+
+    /* Mode bar — Outlook only */
+    .mode-bar { display:none; align-items:center; gap:0; padding:6px 10px 0; background:var(--surface); flex-shrink:0; }
+    .mode-toggle { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+    .mode-btn { padding:3px 12px; font-size:10.5px; font-weight:600; color:var(--text-muted); background:none; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s,color 0.15s; border-radius:20px; }
+    .mode-btn.active { background:var(--accent); color:white; }
+    .mode-count { font-size:10px; color:var(--text-faint); font-family:'DM Mono',monospace; margin-left:auto; }
+
+    /* Soft divider between email-ready and letter-only */
+    .section-divider { display:flex; align-items:center; gap:7px; margin:10px 0 7px; }
+    .section-divider-line { flex:1; height:1px; background:var(--border); }
+    .section-divider-label { font-size:9.5px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-faint); white-space:nowrap; }
+
+    /* Letter-only card stripe */
+    .para-card.letter-only { border-left:3px solid var(--border-strong); }
+    .para-card.letter-only:hover { border-left-color:var(--accent); }
   </style>
 </head>
 <body>
@@ -134,6 +166,14 @@
       <img id="logoImg" alt="PBS"/>
     </div>
     <span class="header-title">PBS Paragraph Library</span>
+    <span class="host-badge" id="hostBadge"></span>
+    <div class="heading-toggle-wrap" id="headingToggleWrap">
+      <span class="heading-label">Heading</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="headingToggle"/>
+        <span class="toggle-track"></span>
+      </label>
+    </div>
     <span class="header-sub" id="countBadge">—</span>
   </div>
   <div class="search-row">
@@ -148,6 +188,14 @@
     </div>
     <button class="sort-btn" id="sortToggle" title="Toggle A–Z sort">A→Z</button>
   </div>
+</div>
+
+<div class="mode-bar" id="modeBar">
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="email">✉ Email</button>
+    <button class="mode-btn" data-mode="all">All</button>
+  </div>
+  <span class="mode-count" id="modeCount"></span>
 </div>
 
 <div class="main-body">
@@ -172,7 +220,7 @@
 
 <script>
 
-const VERSION = "v1.2.1";
+const VERSION = "v2.0.0";
 const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
 const LIST_NAME = "ParagraphLibrary";
 const MAX_RECENT = 3;
@@ -180,12 +228,30 @@ const PLACEHOLDER_RE = /\$(amount|x+|xxx|wages\s*amount|shortfall\s*amount|extra
 
 let allParagraphs = [], activeCategory = "All", insertPosition = "cursor";
 let searchTerm = "", sortAZ = false, keyboardIndex = -1, recentTitles = [];
+let isOutlook = false, viewMode = "email", includeHeading = false;
 
 try { recentTitles = JSON.parse(localStorage.getItem("pbs_recent") || "[]"); } catch(e) { recentTitles = []; }
 
 document.getElementById("logoImg").src = "data:image/png;base64,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";
 
-Office.onReady(() => { loadParagraphs(); wireUI(); });
+Office.onReady(info => {
+  isOutlook = (info.host === Office.HostType.Outlook);
+  applyHostUI();
+  loadParagraphs();
+  wireUI();
+});
+
+function applyHostUI() {
+  const badge = document.getElementById("hostBadge");
+  badge.textContent = isOutlook ? "Outlook" : "Word";
+  badge.style.display = "inline-flex";
+  if (isOutlook) {
+    document.getElementById("modeBar").style.display = "flex";
+    document.getElementById("headingToggleWrap").style.display = "flex";
+    document.getElementById("positionBar").style.display = "none";
+  }
+  // Word: positionBar already visible by default in CSS (not hidden)
+}
 
 async function loadParagraphs() {
   setStatus("loading", "Loading…");
@@ -250,6 +316,8 @@ function getFiltered() {
   });
   if (sortAZ) list = [...list].sort((a,b) => a.Title.localeCompare(b.Title));
   else list = [...list].sort((a,b) => (a.SortOrder??999)-(b.SortOrder??999));
+  // In Outlook email mode: filter to EmailReady only
+  if (isOutlook && viewMode === "email") list = list.filter(p => p.EmailReady === true);
   return list;
 }
 
@@ -258,15 +326,41 @@ function render() {
   const filtered = getFiltered();
   keyboardIndex = -1;
   document.getElementById("countBadge").textContent = filtered.length + " item" + (filtered.length!==1?"s":"");
+
+  // In Outlook All mode: build two groups with soft divider
+  let segments;
+  if (isOutlook && viewMode === "all") {
+    const emailItems  = filtered.filter(p => p.EmailReady === true);
+    const letterItems = filtered.filter(p => p.EmailReady !== true);
+    segments = [];
+    emailItems.forEach(p => segments.push({ para: p, letterOnly: false }));
+    if (letterItems.length > 0) {
+      segments.push({ divider: true, label: emailItems.length > 0 ? "Letter / Report only" : "All paragraphs" });
+    }
+    letterItems.forEach(p => segments.push({ para: p, letterOnly: true }));
+  } else {
+    segments = filtered.map(p => ({ para: p, letterOnly: false }));
+  }
+
   if (!filtered.length) {
     wrap.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>No paragraphs found</p></div>`;
     wrap._filtered = [];
     return;
   }
-  wrap.innerHTML = filtered.map((p,i) => {
+
+  const flatParas = segments.filter(s => !s.divider).map(s => s.para);
+  wrap._filtered = flatParas;
+
+  let html = ""; let pIdx = 0;
+  segments.forEach(seg => {
+    if (seg.divider) {
+      html += `<div class="section-divider"><div class="section-divider-line"></div><span class="section-divider-label">${escHtml(seg.label)}</span><div class="section-divider-line"></div></div>`;
+      return;
+    }
+    const p = seg.para; const i = pIdx++;
     const hasWarn = PLACEHOLDER_RE.test(stripHtml(p.Content)+" "+p.Title);
     const wc = wordCount(p.Content);
-    return `<div class="para-card" data-index="${i}" tabindex="-1" style="animation-delay:${Math.min(i*0.03,0.25)}s">
+    html += `<div class="para-card${seg.letterOnly?" letter-only":""}" data-index="${i}" tabindex="-1" style="animation-delay:${Math.min(i*0.03,0.25)}s">
       <div class="card-top">
         <span class="card-title">${escHtml(p.Title)}</span>
         <span class="card-badges">
@@ -283,8 +377,9 @@ function render() {
         </div>
       </div>
     </div>`;
-  }).join("");
-  wrap._filtered = filtered;
+  });
+
+  wrap.innerHTML = html;
   wrap.querySelectorAll(".insert-btn").forEach(btn => btn.addEventListener("click", e => { e.stopPropagation(); insertParagraph(wrap._filtered[+btn.dataset.index]); }));
   wrap.querySelectorAll(".para-card").forEach(card => card.addEventListener("click", e => {
     if (e.target.closest(".expand-btn,.insert-btn")) return;
@@ -303,6 +398,10 @@ function togglePreview(index, para) {
 }
 
 function insertParagraph(para) {
+  if (isOutlook) { insertOutlook(para); } else { insertWord(para); }
+}
+
+function insertWord(para) {
   const html = `<html><body><p style="font-family:Aptos,Calibri,sans-serif;font-size:16pt;font-weight:bold;color:#000000;margin:0 0 6pt 0;">${escHtml(para.Title)}</p><div style="font-family:Aptos,Calibri,sans-serif;font-size:11pt;color:#000000;">${para.Content}</div></body></html>`;
   const opts = { coercionType: Office.CoercionType.Html, asyncContext: para.Title };
   const doInsert = () => Office.context.document.setSelectedDataAsync(html, opts, r => {
@@ -311,6 +410,27 @@ function insertParagraph(para) {
   });
   if (insertPosition === "cursor") { doInsert(); }
   else { Word.run(async ctx => { ctx.document.body.getRange(Word.RangeLocation.end).select(); await ctx.sync(); doInsert(); }); }
+}
+
+function insertOutlook(para) {
+  // Strip Word report-style inline heading sizes so content merges with email font
+  const cleanContent = para.Content
+    .replace(/(<p[^>]*?)style="[^"]*font-size:\s*12pt[^"]*font-weight:\s*bold[^"]*"([^>]*>)/gi, '$1style="font-weight:bold;"$2')
+    .replace(/(<p[^>]*?)style="[^"]*font-weight:\s*bold[^"]*font-size:\s*12pt[^"]*"([^>]*>)/gi, '$1style="font-weight:bold;"$2');
+  let html = "";
+  if (includeHeading) html += `<p><strong>${escHtml(para.Title)}</strong></p>`;
+  html += cleanContent;
+  Office.context.mailbox.item.body.setSelectedDataAsync(html, { coercionType: Office.CoercionType.Html }, r => {
+    if (r.status === Office.AsyncResultStatus.Succeeded) { showToast("✓ Inserted: "+para.Title); }
+    else {
+      // Fallback: plain text
+      Office.context.mailbox.item.body.setSelectedDataAsync(
+        (includeHeading ? para.Title+"\n\n" : "") + stripHtml(para.Content),
+        { coercionType: Office.CoercionType.Text },
+        r2 => { showToast(r2.status === Office.AsyncResultStatus.Succeeded ? "✓ Inserted as plain text" : "⚠ Insert failed — is a compose window open?"); }
+      );
+    }
+  });
 }
 
 function addRecent(title) {
@@ -356,6 +476,17 @@ function wireUI() {
     btn.classList.add("active");
     insertPosition = btn.dataset.pos;
   }));
+
+  // Outlook: mode toggle and heading toggle
+  document.querySelectorAll(".mode-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      viewMode = btn.dataset.mode;
+      render();
+    });
+  });
+  document.getElementById("headingToggle").addEventListener("change", e => { includeHeading = e.target.checked; });
 }
 
 function clearSearch() {
