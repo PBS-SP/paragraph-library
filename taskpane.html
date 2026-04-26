@@ -18,6 +18,9 @@
               content parser splits on h4/p/ul/ol/table segments;
               Heading 3 (title), Heading 4 (subheadings), Normal (body/lists), table via insertHtml;
               doc style OFF uses robust Aptos inline CSS: 16pt bold title, 12pt bold H4, 11pt body -->
+<!-- v2.3.0 - Doc style ON rebuilt using insertOoxml for reliable style inheritance;
+              OOXML generator handles p/h3/h4/ul/ol/table segments with inline formatting;
+              Word manifest requires WordApi 1.3 for insertOoxml support -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -453,79 +456,238 @@ function insertWord(para) {
   }
 }
 
-// ── Doc style ON: Word.run paragraph-by-paragraph ────────────────────────────
-// Segments content into h4 / p / ul / ol / table blocks and inserts each
-// with the correct built-in Word style. Tables use insertHtml as a safe fallback.
+// ── Doc style ON: insertOoxml via Word.run ────────────────────────────────────
+// Builds a complete OOXML fragment and inserts it in one call.
+// Styles reference document built-ins: Heading3, Heading4, Normal, ListParagraph.
 
 function insertWordDocStyle(para) {
+  const segments = parseContentSegments(para.Content);
+  const insertList = [];
+  if (includeHeading) insertList.push({ type: "h3", text: para.Title });
+  insertList.push(...segments);
+
+  const ooxml = buildOoxml(insertList);
+
   Word.run(async ctx => {
-    // Determine anchor range
-    let anchor;
+    let range;
     if (insertPosition === "end") {
-      anchor = ctx.document.body.getRange(Word.RangeLocation.end);
+      range = ctx.document.body.getRange(Word.RangeLocation.end);
     } else {
-      anchor = ctx.document.getSelection();
-      anchor.collapse(false);
+      range = ctx.document.getSelection();
+      range.collapse(false);
     }
-    await ctx.sync();
-
-    // Parse content into ordered segments
-    const segments = parseContentSegments(para.Content);
-
-    // Build insert list: prepend title heading if toggle is on
-    const insertList = [];
-    if (includeHeading) {
-      insertList.push({ type: "h3", text: para.Title });
-    }
-    insertList.push(...segments);
-
-    // Insert segments in reverse order (each inserted "after" anchor,
-    // so reversing gives correct final reading order)
-    for (let i = insertList.length - 1; i >= 0; i--) {
-      const seg = insertList[i];
-
-      if (seg.type === "table") {
-        // Tables: insertHtml after anchor — Word renders the table natively
-        anchor.insertHtml(seg.html, Word.InsertLocation.after);
-
-      } else if (seg.type === "ul" || seg.type === "ol") {
-        // Lists: insert each item as a List Paragraph, reversed within the list
-        const items = seg.items.slice().reverse();
-        for (const itemHtml of items) {
-          const p = anchor.insertParagraph(stripHtml(itemHtml), Word.InsertLocation.after);
-          p.styleBuiltIn = Word.BuiltInStyleName.listParagraph;
-          if (seg.type === "ol") {
-            p.listItem.level = 0;
-          }
-        }
-
-      } else if (seg.type === "h4") {
-        const p = anchor.insertParagraph(stripHtml(seg.html), Word.InsertLocation.after);
-        p.styleBuiltIn = Word.BuiltInStyleName.heading4;
-
-      } else if (seg.type === "h3") {
-        const p = anchor.insertParagraph(seg.text || stripHtml(seg.html || ""), Word.InsertLocation.after);
-        p.styleBuiltIn = Word.BuiltInStyleName.heading3;
-
-      } else {
-        // p and everything else → Normal style
-        // Preserve inline formatting (bold, italic, spans) via insertHtml
-        const p = anchor.insertParagraph("", Word.InsertLocation.after);
-        p.styleBuiltIn = Word.BuiltInStyleName.normal;
-        if (seg.html && seg.html.trim()) {
-          p.insertHtml(seg.html, Word.InsertLocation.replace);
-        }
-      }
-    }
-
+    range.insertOoxml(ooxml, Word.InsertLocation.after);
     await ctx.sync();
     showToast("✓ Inserted: " + para.Title);
     addRecent(para.Title);
-
   }).catch(err => {
-    console.error("Doc style insert failed, falling back to inline:", err);
+    console.error("OOXML insert failed, falling back to inline:", err);
     insertWordInline(para);
   });
+}
+
+// ── OOXML builder ─────────────────────────────────────────────────────────────
+// Produces a valid OOXML fragment from typed segments.
+// Each segment becomes one or more <w:p> or <w:tbl> elements.
+
+function buildOoxml(segments) {
+  const NS =
+    'xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" ' +
+    'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" ' +
+    'xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ' +
+    'xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" ' +
+    'xmlns:v="urn:schemas-microsoft-com:vml" ' +
+    'xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" ' +
+    'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" ' +
+    'xmlns:w10="urn:schemas-microsoft-com:office:word" ' +
+    'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ' +
+    'xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" ' +
+    'xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" ' +
+    'xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" ' +
+    'xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" ' +
+    'xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"';
+
+  let body = "";
+
+  for (const seg of segments) {
+    if (seg.type === "h3") {
+      body += ooxmlPara(seg.text || stripHtml(seg.html || ""), "Heading3", []);
+    } else if (seg.type === "h4") {
+      body += ooxmlPara(stripHtml(seg.html || ""), "Heading4", []);
+    } else if (seg.type === "p") {
+      body += ooxmlParaFromHtml(seg.html, "Normal");
+    } else if (seg.type === "ul") {
+      for (const item of seg.items) {
+        body += ooxmlListItem(item, "ListParagraph", false);
+      }
+    } else if (seg.type === "ol") {
+      for (const item of seg.items) {
+        body += ooxmlListItem(item, "ListParagraph", true);
+      }
+    } else if (seg.type === "table") {
+      body += ooxmlTable(seg.node);
+    }
+  }
+
+  // OOXML requires at least one paragraph after block content
+  body += ooxmlPara("", "Normal", []);
+
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+    `<pkg:package xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage">` +
+    `<pkg:part pkg:name="/_rels/.rels" pkg:contentType="application/vnd.openxmlformats-package.relationships+xml">` +
+    `<pkg:xmlData><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+    `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
+    `</Relationships></pkg:xmlData></pkg:part>` +
+    `<pkg:part pkg:name="/word/document.xml" pkg:contentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml">` +
+    `<pkg:xmlData><w:document ${NS}><w:body>${body}</w:body></w:document></pkg:xmlData>` +
+    `</pkg:part></pkg:package>`;
+}
+
+// ── OOXML paragraph helpers ───────────────────────────────────────────────────
+
+// Plain paragraph with a style and pre-built runs array
+function ooxmlPara(text, style, runs) {
+  const r = runs.length
+    ? runs.join("")
+    : `<w:r><w:t xml:space="preserve">${ooxmlEsc(text)}</w:t></w:r>`;
+  return `<w:p><w:pPr><w:pStyle w:val="${style}"/></w:pPr>${r}</w:p>`;
+}
+
+// Paragraph from an HTML inner string — converts inline bold/italic/spans to runs
+function ooxmlParaFromHtml(html, style) {
+  const runs = htmlToRuns(html);
+  return `<w:p><w:pPr><w:pStyle w:val="${style}"/></w:pPr>${runs}</w:p>`;
+}
+
+// List item — uses ListParagraph style with bullet or number numPr
+function ooxmlListItem(itemHtml, style, isOrdered) {
+  const runs = htmlToRuns(itemHtml);
+  // numId 1 = bullet, numId 2 = numbered — Word uses its own list definitions
+  // We use abstractNumId reference via the document's existing list styles
+  const numPr = isOrdered
+    ? `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="2"/></w:numPr>`
+    : `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>`;
+  return `<w:p><w:pPr><w:pStyle w:val="${style}"/>${numPr}</w:pPr>${runs}</w:p>`;
+}
+
+// Table from a DOM node — converts to OOXML table
+function ooxmlTable(node) {
+  if (!node) return "";
+  let rows = "";
+  const trNodes = node.querySelectorAll("tr");
+  trNodes.forEach(tr => {
+    let cells = "";
+    tr.querySelectorAll("td, th").forEach(td => {
+      const isHeader = td.tagName.toLowerCase() === "th";
+      const cellRuns = htmlToRuns(td.innerHTML);
+      const rPr = isHeader ? "<w:rPr><w:b/></w:rPr>" : "";
+      cells +=
+        `<w:tc><w:tcPr><w:tcBorders>` +
+        `<w:top w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+        `<w:left w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+        `<w:bottom w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+        `<w:right w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+        `</w:tcBorders></w:tcPr>` +
+        `<w:p><w:pPr><w:pStyle w:val="Normal"/></w:pPr>${rPr}${cellRuns}</w:p>` +
+        `</w:tc>`;
+    });
+    rows += `<w:tr>${cells}</w:tr>`;
+  });
+  return `<w:tbl><w:tblPr>` +
+    `<w:tblStyle w:val="TableNormal"/>` +
+    `<w:tblW w:w="0" w:type="auto"/>` +
+    `<w:tblBorders>` +
+    `<w:top w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+    `<w:left w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+    `<w:bottom w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+    `<w:right w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+    `<w:insideH w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+    `<w:insideV w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>` +
+    `</w:tblBorders></w:tblPr>${rows}</w:tbl>`;
+}
+
+// ── HTML → OOXML runs converter ───────────────────────────────────────────────
+// Walks DOM nodes and produces <w:r> elements preserving bold, italic,
+// underline, highlight (yellow spans), and plain text.
+
+function htmlToRuns(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return nodeToRuns(div, { bold: false, italic: false, underline: false, highlight: false });
+}
+
+function nodeToRuns(node, fmt) {
+  let runs = "";
+  node.childNodes.forEach(child => {
+    if (child.nodeType === 3) {
+      // Text node
+      const text = child.textContent;
+      if (text) runs += makeRun(text, fmt);
+    } else if (child.nodeType === 1) {
+      const tag = child.tagName.toLowerCase();
+      let childFmt = { ...fmt };
+      if (tag === "strong" || tag === "b") childFmt.bold = true;
+      if (tag === "em" || tag === "i") childFmt.italic = true;
+      if (tag === "u") childFmt.underline = true;
+      if (tag === "span") {
+        const style = child.getAttribute("style") || "";
+        if (style.includes("background-color:#FFFF00") || style.includes("background-color: #FFFF00") ||
+            style.includes("background-color:yellow") || style.includes("background-color: yellow")) {
+          childFmt.highlight = true;
+        }
+      }
+      runs += nodeToRuns(child, childFmt);
+    }
+  });
+  return runs;
+}
+
+function makeRun(text, fmt) {
+  let rPr = "";
+  if (fmt.bold)      rPr += "<w:b/>";
+  if (fmt.italic)    rPr += "<w:i/>";
+  if (fmt.underline) rPr += "<w:u w:val=\"single\"/>";
+  if (fmt.highlight) rPr += "<w:highlight w:val=\"yellow\"/>";
+  const rPrXml = rPr ? `<w:rPr>${rPr}</w:rPr>` : "";
+  return `<w:r>${rPrXml}<w:t xml:space="preserve">${ooxmlEsc(text)}</w:t></w:r>`;
+}
+
+function ooxmlEsc(str) {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// ── Content parser ────────────────────────────────────────────────────────────
+// Splits HTML content string into typed segments for OOXML building.
+// Returns array of: { type: "p"|"h4"|"ul"|"ol"|"table", html?, text?, items?, node? }
+
+function parseContentSegments(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  const segments = [];
+
+  div.childNodes.forEach(node => {
+    if (node.nodeType !== 1) return;
+    const tag = node.tagName.toLowerCase();
+
+    if (tag === "h4") {
+      segments.push({ type: "h4", html: node.innerHTML });
+    } else if (tag === "ul" || tag === "ol") {
+      const items = Array.from(node.querySelectorAll("li")).map(li => li.innerHTML);
+      if (items.length) segments.push({ type: tag, items });
+    } else if (tag === "table") {
+      segments.push({ type: "table", node });
+    } else {
+      const inner = node.innerHTML.trim();
+      if (inner) segments.push({ type: "p", html: inner });
+    }
+  });
+
+  return segments;
 }
 
 // ── Inline (doc style OFF): setSelectedDataAsync with Aptos inline CSS ───────
@@ -535,17 +697,14 @@ function insertWordInline(para) {
   const FONT = "Aptos, Calibri, sans-serif";
   const COLOR = "#000000";
 
-  // Convert H4 tags to 12pt bold inline paragraphs
   const bodyHtml = para.Content.replace(
     /<h4[^>]*>([\s\S]*?)<\/h4>/gi,
     `<p style="font-family:${FONT};font-size:12pt;font-weight:bold;color:${COLOR};margin:6pt 0 2pt 0;">$1</p>`
   );
 
-  // Wrap entire body in 11pt Aptos so all p/ul/ol/table inherit it
   const wrappedBody =
     `<div style="font-family:${FONT};font-size:11pt;color:${COLOR};">` +
-    bodyHtml +
-    `</div>`;
+    bodyHtml + `</div>`;
 
   let html = "<html><body>";
   if (includeHeading) {
@@ -577,69 +736,25 @@ function insertWordInline(para) {
   }
 }
 
-// ── Content parser ────────────────────────────────────────────────────────────
-// Splits HTML content string into typed segments for Word.run insertion.
-// Returns array of: { type: "p"|"h4"|"ul"|"ol"|"table", html, items? }
-
-function parseContentSegments(html) {
-  // Use a temporary DOM element to parse the HTML reliably
-  const div = document.createElement("div");
-  div.innerHTML = html;
-
-  const segments = [];
-
-  div.childNodes.forEach(node => {
-    if (node.nodeType !== 1) return; // skip text nodes
-    const tag = node.tagName.toLowerCase();
-
-    if (tag === "h4") {
-      segments.push({ type: "h4", html: node.innerHTML });
-
-    } else if (tag === "ul" || tag === "ol") {
-      const items = Array.from(node.querySelectorAll("li")).map(li => li.innerHTML);
-      if (items.length) segments.push({ type: tag, items });
-
-    } else if (tag === "table") {
-      segments.push({ type: "table", html: node.outerHTML });
-
-    } else {
-      // p, div, and anything else treated as body paragraph
-      const inner = node.innerHTML.trim();
-      if (inner) segments.push({ type: "p", html: inner });
-    }
-  });
-
-  return segments;
-}
-
 // ── Outlook insert ────────────────────────────────────────────────────────────
-// H4s → plain bold, no imposed font sizes — merges with email compose font.
 
 function insertOutlook(para) {
   const cleanContent = para.Content
     .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "<p><strong>$1</strong></p>");
-
   let html = "";
   if (includeHeading) html += `<p><strong>${escHtml(para.Title)}</strong></p>`;
   html += cleanContent;
-
   Office.context.mailbox.item.body.setSelectedDataAsync(
-    html,
-    { coercionType: Office.CoercionType.Html },
-    r => {
+    html, { coercionType: Office.CoercionType.Html }, r => {
       if (r.status === Office.AsyncResultStatus.Succeeded) {
         showToast("✓ Inserted: " + para.Title);
       } else {
-        // Fallback: plain text
         const plain = (includeHeading ? para.Title + "\n\n" : "") + stripHtml(para.Content);
         Office.context.mailbox.item.body.setSelectedDataAsync(
-          plain,
-          { coercionType: Office.CoercionType.Text },
-          r2 => {
-            showToast(r2.status === Office.AsyncResultStatus.Succeeded
-              ? "✓ Inserted as plain text"
-              : "⚠ Insert failed — is a compose window open?");
-          }
+          plain, { coercionType: Office.CoercionType.Text },
+          r2 => { showToast(r2.status === Office.AsyncResultStatus.Succeeded
+            ? "✓ Inserted as plain text"
+            : "⚠ Insert failed — is a compose window open?"); }
         );
       }
     }
