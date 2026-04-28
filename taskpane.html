@@ -23,6 +23,9 @@
               Word manifest requires WordApi 1.3 for insertOoxml support -->
 <!-- v2.3.1 - Search bar + sort toggle moved below header into main-body so Office system banners
               (e.g. add-in catalog warnings) do not obscure search or heading toggles -->
+<!-- v2.3.2 - Fixed heading toggle not showing in Word: added missing id="positionBar";
+              entire app (header, toggles, search, list, footer) moved inside single .main-body
+              flex column so Office banner pushes whole app down without clipping anything -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,8 +71,11 @@
     .sort-btn { flex-shrink:0; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:6px 7px; font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--text-muted); cursor:pointer; white-space:nowrap; transition:background 0.15s,color 0.15s,border-color 0.15s; letter-spacing:0.02em; }
     .sort-btn.az-active { background:var(--accent-light); border-color:#c8e2d0; color:var(--accent); }
 
-    /* Main body — now vertical stack, no sidebar */
-    .main-body { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    /* App wrapper — display:contents so body flex applies directly to children */
+    #app { display:contents; }
+
+    /* Main body — IS the full layout column now, contains header + all UI */
+    .main-body { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
 
     /* Category panel — wrapping pill grid above list */
     .cat-panel { background:var(--surface); border-bottom:1px solid var(--border); padding:8px 10px; flex-shrink:0; }
@@ -187,43 +193,47 @@
 </head>
 <body>
 <div id="app">
-<div class="header">
-  <div class="header-top">
-    <div class="logo">
-      <img id="logoImg" alt="PBS"/>
-    </div>
-    <span class="header-title">PBS Paragraph Library</span>
-    <span class="host-badge" id="hostBadge"></span>
-    <div class="heading-toggle-wrap" id="headingToggleWrap">
-      <span class="heading-label">Heading</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="headingToggle"/>
-        <span class="toggle-track"></span>
-      </label>
-    </div>
-    <span class="header-sub" id="countBadge">—</span>
-  </div>
-</div>
-
-<div class="mode-bar" id="modeBar">
-  <div class="mode-toggle">
-    <button class="mode-btn active" data-mode="email">✉ Email</button>
-    <button class="mode-btn" data-mode="all">All</button>
-  </div>
-  <span class="mode-count" id="modeCount"></span>
-</div>
-
-<!-- Match doc style sub-row: Word only, shown when heading toggle is on -->
-<div class="docstyle-toggle-wrap" id="docStyleWrap">
-  <label class="toggle-switch">
-    <input type="checkbox" id="docStyleToggle"/>
-    <span class="toggle-track"></span>
-  </label>
-  <span class="docstyle-label">Match doc style</span>
-  <span class="docstyle-hint" id="docStyleHint">uses H3 / H4 from document theme</span>
-</div>
 
 <div class="main-body">
+  <!-- Header: always visible, flows below any Office banner -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">
+        <img id="logoImg" alt="PBS"/>
+      </div>
+      <span class="header-title">PBS Paragraph Library</span>
+      <span class="host-badge" id="hostBadge"></span>
+      <div class="heading-toggle-wrap" id="headingToggleWrap">
+        <span class="heading-label">Heading</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="headingToggle"/>
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <span class="header-sub" id="countBadge">—</span>
+    </div>
+  </div>
+
+  <!-- Outlook only: Email/All mode bar -->
+  <div class="mode-bar" id="modeBar">
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="email">✉ Email</button>
+      <button class="mode-btn" data-mode="all">All</button>
+    </div>
+    <span class="mode-count" id="modeCount"></span>
+  </div>
+
+  <!-- Word only: Match doc style toggle -->
+  <div class="docstyle-toggle-wrap" id="docStyleWrap">
+    <label class="toggle-switch">
+      <input type="checkbox" id="docStyleToggle"/>
+      <span class="toggle-track"></span>
+    </label>
+    <span class="docstyle-label">Match doc style</span>
+    <span class="docstyle-hint" id="docStyleHint">uses H3 / H4 from document theme</span>
+  </div>
+
+  <!-- Search bar -->
   <div class="search-bar">
     <div class="search-wrap">
       <span class="search-icon">
@@ -236,28 +246,35 @@
     </div>
     <button class="sort-btn" id="sortToggle" title="Toggle A–Z sort">A→Z</button>
   </div>
+
+  <!-- Category pills -->
   <div class="cat-panel" id="catPanel"><div class="cat-panel-inner"></div></div>
+
+  <!-- Paragraph list — this section scrolls -->
   <div class="list-wrap" id="listWrap"><div class="loading"><div class="spinner"></div>Loading…</div></div>
-</div>
 
-<div class="position-bar">
-  <span class="position-label">Insert:</span>
-  <div class="position-toggle">
-    <button class="pos-btn active" data-pos="cursor">At cursor</button>
-    <button class="pos-btn" data-pos="end">End of doc</button>
+  <!-- Insert position toggle -->
+  <div class="position-bar" id="positionBar">
+    <span class="position-label">Insert:</span>
+    <div class="position-toggle">
+      <button class="pos-btn active" data-pos="cursor">At cursor</button>
+      <button class="pos-btn" data-pos="end">End of doc</button>
+    </div>
   </div>
-</div>
 
-<div class="status-bar">
-  <span><span class="status-dot loading" id="statusDot"></span><span id="statusText">Connecting…</span></span>
-  <span id="lastUpdated"></span>
-</div>
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span><span class="status-dot loading" id="statusDot"></span><span id="statusText">Connecting…</span></span>
+    <span id="lastUpdated"></span>
+  </div>
+
+</div><!-- .main-body -->
 
 <div class="toast" id="toast"></div>
 
 <script>
 
-const VERSION = "v2.3.1";
+const VERSION = "v2.3.2";
 const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
 const LIST_NAME = "ParagraphLibrary";
 const MAX_RECENT = 3;
