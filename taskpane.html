@@ -27,6 +27,9 @@
               entire app moved into single .main-body flex column -->
 <!-- v2.3.3 - #app switched to position:fixed with dynamic MutationObserver banner offset;
               app always sits below Office notification banners; version bump rule applied -->
+<!-- v2.3.4 - More aggressive banner detection (reverted) -->
+<!-- v2.3.5 - Removed position:fixed entirely; body is flex column, #app is flex:1 child;
+              Office banner flows above #app naturally, app fills remaining height -->
               entire app (header, toggles, search, list, footer) moved inside single .main-body
               flex column so Office banner pushes whole app down without clipping anything -->
 <!DOCTYPE html>
@@ -47,8 +50,8 @@
       --sidebar-bg: #f0f5f1; --success: #0a5c36;
       --radius: 8px; --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
     }
-    html, body { height:100%; margin:0; padding:0; overflow:hidden; }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; }
+    html { height:100%; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; min-height:100%; display:flex; flex-direction:column; overflow:hidden; }
 
     /* Header — logo, host badge, heading toggle only. Search moved below. */
     .header { background:var(--surface); border-bottom:1px solid var(--border); padding:9px 13px 8px; flex-shrink:0; }
@@ -74,11 +77,8 @@
     .sort-btn { flex-shrink:0; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:6px 7px; font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--text-muted); cursor:pointer; white-space:nowrap; transition:background 0.15s,color 0.15s,border-color 0.15s; letter-spacing:0.02em; }
     .sort-btn.az-active { background:var(--accent-light); border-color:#c8e2d0; color:var(--accent); }
 
-    /* App: position:fixed so it always occupies the full viewport.
-       JS measures any Office banner above and sets top offset dynamically. */
-    #app { position:fixed; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; overflow:hidden; }
-
-    /* Main body — full flex column inside #app */
+    /* #app fills all remaining body height after any Office banner above it */
+    #app { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
     .main-body { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
 
     /* Category panel — wrapping pill grid above list */
@@ -278,7 +278,7 @@
 
 <script>
 
-const VERSION = "v2.3.3";
+const VERSION = "v2.3.5";
 const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
 const LIST_NAME = "ParagraphLibrary";
 const MAX_RECENT = 3;
@@ -293,30 +293,13 @@ try { recentTitles = JSON.parse(localStorage.getItem("pbs_recent") || "[]"); } c
 document.getElementById("logoImg").src = "data:image/png;base64,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";
 
 
-// ── Banner offset: push #app below any Office-injected notification banner ──
-function adjustForBanner() {
-  const app = document.getElementById("app");
-  let maxBottom = 0;
-  // Office banners are siblings of #app in <body>, positioned before it
-  Array.from(document.body.children).forEach(el => {
-    if (el.id === "app") return;
-    const rect = el.getBoundingClientRect();
-    if (rect.bottom > maxBottom) maxBottom = rect.bottom;
-  });
-  app.style.top = maxBottom > 0 ? maxBottom + "px" : "0px";
-}
 
-// Watch for banner appearing/disappearing
-const _bannerObserver = new MutationObserver(adjustForBanner);
-_bannerObserver.observe(document.body, { childList: true, subtree: false });
-window.addEventListener("resize", adjustForBanner);
 
 Office.onReady(info => {
   isOutlook = (info.host === Office.HostType.Outlook);
   applyHostUI();
   loadParagraphs();
   wireUI();
-  adjustForBanner();
 });
 
 function applyHostUI() {
