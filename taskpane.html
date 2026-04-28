@@ -1,4 +1,4 @@
-<!-- PBS Paragraph Library v2.0.0 -->
+<!-- PBS Paragraph Library v2.3.1 -->
 <!-- v1.0.0 - Base working version -->
 <!-- v1.1.0 - Added eye expand preview -->
 <!-- v1.1.1 - Increased inserted heading font size from 14pt to 16pt -->
@@ -21,6 +21,8 @@
 <!-- v2.3.0 - Doc style ON rebuilt using insertOoxml for reliable style inheritance;
               OOXML generator handles p/h3/h4/ul/ol/table segments with inline formatting;
               Word manifest requires WordApi 1.3 for insertOoxml support -->
+<!-- v2.3.1 - Search bar + sort toggle moved below header into main-body so Office system banners
+              (e.g. add-in catalog warnings) do not obscure search or heading toggles -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,16 +43,18 @@
     }
     body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
-    /* Header */
-    .header { background:var(--surface); border-bottom:1px solid var(--border); padding:11px 13px 9px; flex-shrink:0; }
-    .header-top { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    /* Header — logo, host badge, heading toggle only. Search moved below. */
+    .header { background:var(--surface); border-bottom:1px solid var(--border); padding:9px 13px 8px; flex-shrink:0; }
+    .header-top { display:flex; align-items:center; gap:8px; }
     .logo { width:28px; height:28px; background:var(--accent-light); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; border:1px solid #c8e2d0; }
     .logo img { width:20px; height:20px; object-fit:contain; }
     .header-title { font-size:13px; font-weight:600; letter-spacing:-0.01em; flex:1; }
     .header-sub { font-size:10px; color:var(--text-faint); font-family:'DM Mono',monospace; }
 
-    /* Search row */
-    .search-row { display:flex; gap:5px; align-items:center; }
+    /* Search bar — inside main-body, below Office system banners */
+    .search-bar { background:var(--surface); border-bottom:1px solid var(--border); padding:8px 10px; flex-shrink:0; display:flex; gap:5px; align-items:center; }
+    /* Search row (alias for search-bar children layout) */
+    .search-row { display:flex; gap:5px; align-items:center; width:100%; }
     .search-wrap { position:relative; flex:1; }
     .search-icon { position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--text-faint); pointer-events:none; }
     .search-icon svg { width:12px; height:12px; display:block; }
@@ -197,18 +201,6 @@
     </div>
     <span class="header-sub" id="countBadge">—</span>
   </div>
-  <div class="search-row">
-    <div class="search-wrap">
-      <span class="search-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-      </span>
-      <input type="text" id="searchInput" placeholder="Search paragraphs…" autocomplete="off"/>
-      <button class="search-clear" id="searchClear" title="Clear (Esc)">×</button>
-    </div>
-    <button class="sort-btn" id="sortToggle" title="Toggle A–Z sort">A→Z</button>
-  </div>
 </div>
 
 <div class="mode-bar" id="modeBar">
@@ -230,6 +222,18 @@
 </div>
 
 <div class="main-body">
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </span>
+      <input type="text" id="searchInput" placeholder="Search paragraphs…" autocomplete="off"/>
+      <button class="search-clear" id="searchClear" title="Clear (Esc)">×</button>
+    </div>
+    <button class="sort-btn" id="sortToggle" title="Toggle A–Z sort">A→Z</button>
+  </div>
   <div class="cat-panel" id="catPanel"><div class="cat-panel-inner"></div></div>
   <div class="list-wrap" id="listWrap"><div class="loading"><div class="spinner"></div>Loading…</div></div>
 </div>
@@ -251,7 +255,7 @@
 
 <script>
 
-const VERSION = "v2.2.0";
+const VERSION = "v2.3.1";
 const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
 const LIST_NAME = "ParagraphLibrary";
 const MAX_RECENT = 3;
