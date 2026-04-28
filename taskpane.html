@@ -41,7 +41,8 @@
       --sidebar-bg: #f0f5f1; --success: #0a5c36;
       --radius: 8px; --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
     }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+    html { height:100%; overflow:hidden; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; height:100%; display:flex; flex-direction:column; overflow:hidden; }
 
     /* Header — logo, host badge, heading toggle only. Search moved below. */
     .header { background:var(--surface); border-bottom:1px solid var(--border); padding:9px 13px 8px; flex-shrink:0; }
@@ -181,10 +182,11 @@
     /* Letter-only card stripe */
     .para-card.letter-only { border-left:3px solid var(--border-strong); }
     .para-card.letter-only:hover { border-left-color:var(--accent); }
+    #app { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
   </style>
 </head>
 <body>
-
+<div id="app">
 <div class="header">
   <div class="header-top">
     <div class="logo">
@@ -856,5 +858,6 @@ const SAMPLE_PARAGRAPHS = [
   { Title:"Division 7A Warning", Category:"Client Communications", SortOrder:20, Content:"<p>The following amounts would be viewed by the ATO as debit loan accounts. This represents cash drawn from the Company by $amount without income tax being paid.</p>" },
 ];
 </script>
+</div><!-- #app -->
 </body>
 </html>
