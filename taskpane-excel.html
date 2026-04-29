@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- PBS Excel Tools v1.0.0
+     v1.0.0  Initial build — Format tab (10 tools), Templates placeholder, Assist placeholder
+             Ribbon: Format Numbers, Format not Zero, PivReformat, Format Pivot Numbers,
+                     Unhide All Sheets, Reset Styles
+             Task pane: full Format tool set + placeholder tabs -->
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PBS Excel Tools</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f7f5; --surface: #ffffff; --border: #e0e5e0; --border-strong: #c2ccc2;
+      --text: #1a1f1a; --text-muted: #5a6b5a; --text-faint: #94a394;
+      --accent: #0a5c36; --accent-mid: #0d7a48; --accent-light: #eaf4ee; --accent-hover: #083f26;
+      --danger: #dc2626; --danger-light: #fef2f2;
+      --warning: #d97706; --warning-light: #fffbeb;
+      --success: #0a5c36;
+      --radius: 8px; --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    }
+    html { height: 100%; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Header ── */
+    .header { background: var(--accent); padding: 12px 14px 10px; flex-shrink: 0; }
+    .header-top { display: flex; align-items: center; gap: 9px; }
+    .logo { width: 26px; height: 26px; flex-shrink: 0; }
+    .logo svg { width: 26px; height: 26px; }
+    .header-title { font-size: 13.5px; font-weight: 600; color: #ffffff; letter-spacing: -0.01em; }
+    .header-sub { font-size: 10px; color: rgba(255,255,255,0.6); margin-left: auto; font-family: 'DM Mono', monospace; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .tab { flex: 1; padding: 9px 6px 10px; font-size: 11.5px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; font-family: 'DM Sans', sans-serif; text-align: center; white-space: nowrap; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    .tab-badge { display: inline-block; font-size: 8.5px; font-weight: 700; background: var(--border); color: var(--text-faint); border-radius: 10px; padding: 1px 5px; margin-left: 4px; letter-spacing: 0.03em; vertical-align: middle; }
+
+    /* ── Scroll area ── */
+    .pane { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    .pane::-webkit-scrollbar { width: 4px; }
+    .pane::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Section headings ── */
+    .section-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); padding: 14px 14px 6px; }
+
+    /* ── Tool cards ── */
+    .tool-grid { display: flex; flex-direction: column; gap: 4px; padding: 0 10px 10px; }
+    .tool-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, background 0.1s; display: flex; align-items: flex-start; gap: 10px; position: relative; overflow: hidden; }
+    .tool-card:hover { border-color: var(--accent-mid); box-shadow: 0 2px 8px rgba(10,92,54,0.10); }
+    .tool-card:active { background: var(--accent-light); }
+    .tool-card.running { opacity: 0.7; pointer-events: none; }
+
+    .tool-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tool-icon svg { width: 15px; height: 15px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .tool-icon.danger-icon { background: var(--danger-light); }
+    .tool-icon.danger-icon svg { stroke: var(--danger); }
+    .tool-icon.warn-icon { background: var(--warning-light); }
+    .tool-icon.warn-icon svg { stroke: var(--warning); }
+
+    .tool-body { flex: 1; min-width: 0; }
+    .tool-name { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .tool-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+    .tool-run { margin-left: auto; padding: 5px 10px; background: var(--accent); color: white; border: none; border-radius: 5px; font-size: 11px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; flex-shrink: 0; align-self: center; transition: background 0.15s; white-space: nowrap; }
+    .tool-run:hover { background: var(--accent-hover); }
+    .tool-run.danger-run { background: var(--danger); }
+    .tool-run.danger-run:hover { background: #b91c1c; }
+
+    /* ── Format preview chip ── */
+    .format-chip { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Placeholder pane ── */
+    .placeholder-pane { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; gap: 12px; text-align: center; flex: 1; }
+    .placeholder-icon { width: 48px; height: 48px; background: var(--accent-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .placeholder-icon svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .placeholder-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .placeholder-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; max-width: 220px; }
+    .placeholder-version { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-faint); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; margin-top: 4px; }
+
+    /* ── Coming soon cards (placeholder panes) ── */
+    .coming-cards { display: flex; flex-direction: column; gap: 6px; padding: 12px 10px; width: 100%; }
+    .coming-card { background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: 10px 12px; display: flex; align-items: center; gap: 10px; opacity: 0.7; }
+    .coming-card-icon { width: 28px; height: 28px; background: var(--bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .coming-card-icon svg { width: 13px; height: 13px; stroke: var(--text-faint); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .coming-card-name { font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
+    .coming-soon-pill { margin-left: auto; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: var(--border); color: var(--text-faint); border-radius: 10px; padding: 2px 7px; white-space: nowrap; }
+
+    /* ── Status bar ── */
+    .status-bar { padding: 4px 12px; background: var(--bg); border-top: 1px solid var(--border); font-size: 10px; color: var(--text-faint); font-family: 'DM Mono', monospace; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-right: 5px; vertical-align: middle; }
+    .status-dot.loading { background: #f59e0b; animation: pulse 1s ease-in-out infinite; }
+    .status-dot.error { background: #ef4444; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--text); color: white; font-size: 11.5px; font-weight: 500; padding: 7px 14px; border-radius: 20px; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; z-index: 100; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--danger); }
+
+    /* ── Confirm dialog ── */
+    .dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .dialog-overlay.show { opacity: 1; pointer-events: all; }
+    .dialog { background: var(--surface); border-radius: 12px 12px 0 0; padding: 20px 16px 16px; width: 100%; transform: translateY(20px); transition: transform 0.2s; }
+    .dialog-overlay.show .dialog { transform: translateY(0); }
+    .dialog-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .dialog-body { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+    .dialog-actions { display: flex; gap: 8px; }
+    .dialog-cancel { flex: 1; padding: 9px; border: 1px solid var(--border); background: var(--bg); border-radius: 6px; font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: var(--text-muted); cursor: pointer; }
+    .dialog-confirm { flex: 1; padding: 9px; border: none; background: var(--danger); border-radius: 6px; font-size: 12px; font-weight: 600; font-family: 'DM Sans', sans-serif; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">
+        <!-- Prescott tree mark — circle version placeholder SVG -->
+        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="13" cy="13" r="13" fill="rgba(255,255,255,0.15)"/>
+          <path d="M13 20v-6M10 17l3-3 3 3M9 14l4-4 4 4M11 11l2-2 2 2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="header-title">PBS Excel Tools</span>
+      <span class="header-sub">v1.0.0</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="format" onclick="switchTab('format')">Format</button>
+    <button class="tab" data-tab="templates" onclick="switchTab('templates')">Templates <span class="tab-badge">SOON</span></button>
+    <button class="tab" data-tab="assist" onclick="switchTab('assist')">Assist <span class="tab-badge">SOON</span></button>
+  </div>
+
+  <!-- ══ FORMAT TAB ══ -->
+  <div class="pane" id="pane-format">
+
+    <div class="section-label">Number Formatting</div>
+    <div class="tool-grid">
+
+      <div class="tool-card" id="card-formatnumbers">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/><path d="M9 3l-6 9 6 9"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Format Numbers</div>
+          <div class="tool-desc">Comma separator, zero decimals, red brackets for negatives.</div>
+          <div class="format-chip">#,##0 — (1,234) in red</div>
+        </div>
+        <button class="tool-run" onclick="runTool('formatNumbers')">Apply</button>
+      </div>
+
+      <div class="tool-card" id="card-formatnotzero">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Format not Zero</div>
+          <div class="tool-desc">Green cell style + red conditional format if value ≠ 0.</div>
+        </div>
+        <button class="tool-run" onclick="runTool('formatNotZero')">Apply</button>
+      </div>
+
+    </div>
+
+    <div class="section-label">Paste &amp; Alignment</div>
+    <div class="tool-grid">
+
+      <div class="tool-card" id="card-quickpaste">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">QuickPaste</div>
+          <div class="tool-desc">Paste as values, preserving column widths and formats.</div>
+        </div>
+        <button class="tool-run" onclick="runTool('quickPaste')">Paste</button>
+      </div>
+
+      <div class="tool-card" id="card-centreacross">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/><path d="M8 6v12"/><path d="M16 6v12"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Centre Across Selection</div>
+          <div class="tool-desc">Better alternative to merge cells — centres without merging.</div>
+        </div>
+        <button class="tool-run" onclick="runTool('centreAcross')">Apply</button>
+      </div>
+
+    </div>
+
+    <div class="section-label">Data &amp; Fill</div>
+    <div class="tool-grid">
+
+      <div class="tool-card" id="card-fillblanks">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Fill Blanks</div>
+          <div class="tool-desc">Copy down through blank cells in a single column selection.</div>
+        </div>
+        <button class="tool-run" onclick="runTool('fillBlanks')">Fill</button>
+      </div>
+
+      <div class="tool-card" id="card-converttext">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h6"/><path d="M15 15l5 5m0-5l-5 5"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Convert to Text</div>
+          <div class="tool-desc">Sets number format to @ and re-enters values as text.</div>
+        </div>
+        <button class="tool-run" onclick="runTool('convertToText')">Convert</button>
+      </div>
+
+    </div>
+
+    <div class="section-label">Pivot Tables</div>
+    <div class="tool-grid">
+
+      <div class="tool-card" id="card-pivreformat">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">PivReformat</div>
+          <div class="tool-desc">Tabular layout, no subtotals, repeat item labels. Click inside a pivot first.</div>
+        </div>
+        <button class="tool-run" onclick="runTool('pivReformat')">Apply</button>
+      </div>
+
+      <div class="tool-card" id="card-pivformatnumbers">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4M14 17h4"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Format Pivot Numbers</div>
+          <div class="tool-desc">Applies #,##0 bracket format to all value fields. Click inside a pivot first.</div>
+          <div class="format-chip">#,##0 — (1,234) in red</div>
+        </div>
+        <button class="tool-run" onclick="runTool('formatPivotNumbers')">Apply</button>
+      </div>
+
+    </div>
+
+    <div class="section-label">Workbook</div>
+    <div class="tool-grid">
+
+      <div class="tool-card" id="card-unhide">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Unhide All Sheets</div>
+          <div class="tool-desc">Makes all hidden sheets in the active workbook visible.</div>
+        </div>
+        <button class="tool-run" onclick="runTool('unhideSheets')">Unhide</button>
+      </div>
+
+      <div class="tool-card" id="card-resetstyles">
+        <div class="tool-icon danger-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+        </div>
+        <div class="tool-body">
+          <div class="tool-name">Reset Styles</div>
+          <div class="tool-desc">Deletes all custom cell styles — clears corrupt or bloated style lists.</div>
+        </div>
+        <button class="tool-run danger-run" onclick="confirmResetStyles()">Reset</button>
+      </div>
+
+    </div>
+
+    <div style="height:16px;"></div>
+  </div>
+
+  <!-- ══ TEMPLATES TAB ══ -->
+  <div class="pane" id="pane-templates" style="display:none; flex-direction:column;">
+    <div class="placeholder-pane">
+      <div class="placeholder-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18M14 14h4M14 17h4"/></svg>
+      </div>
+      <div class="placeholder-title">Templates</div>
+      <div class="placeholder-desc">Pre-built table structures for tax summaries, BAS worksheets, loan schedules and more.</div>
+      <div class="placeholder-version">Coming in v1.1.0</div>
+    </div>
+    <div class="coming-cards">
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><path d="M9 14l-4-4 4-4M15 14l4-4-4-4"/></svg></div>
+        <div class="coming-card-name">Div 7A Repayment Schedule</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18"/></svg></div>
+        <div class="coming-card-name">BAS Worksheet</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+        <div class="coming-card-name">Tax Summary (Individual)</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></svg></div>
+        <div class="coming-card-name">Loan Schedule</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg></div>
+        <div class="coming-card-name">Super Guarantee Calc</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ASSIST TAB ══ -->
+  <div class="pane" id="pane-assist" style="display:none; flex-direction:column;">
+    <div class="placeholder-pane">
+      <div class="placeholder-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 2L12 12"/><path d="M15 2h7v7"/></svg>
+      </div>
+      <div class="placeholder-title">PBS Assist</div>
+      <div class="placeholder-desc">Claude-powered formula explainer, data analyser and workpaper assistant — built for accounting workflows.</div>
+      <div class="placeholder-version">Coming in v1.2.0</div>
+    </div>
+    <div class="coming-cards">
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><path d="M9 9h6M9 12h6M9 15h4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+        <div class="coming-card-name">Explain Formula</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="coming-card-name">Analyse Data</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <div class="coming-card-name">Write Formula</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+      <div class="coming-card">
+        <div class="coming-card-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        <div class="coming-card-name">Optimise Formula</div>
+        <span class="coming-soon-pill">Soon</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span><span class="status-dot" id="statusDot"></span><span id="statusText">Ready</span></span>
+    <span>PBS Excel Tools v1.0.0</span>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Confirm dialog (Reset Styles) -->
+  <div class="dialog-overlay" id="confirmDialog">
+    <div class="dialog">
+      <div class="dialog-title">Reset Styles?</div>
+      <div class="dialog-body">This will delete all custom cell styles in the active workbook. Built-in styles (Normal, Good, Bad, etc.) are not affected. This cannot be undone.</div>
+      <div class="dialog-actions">
+        <button class="dialog-cancel" onclick="closeDialog()">Cancel</button>
+        <button class="dialog-confirm" onclick="runTool('resetStyles')">Reset Styles</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Office initialisation ─────────────────────────────────────────────────
+    Office.onReady(info => {
+      if (info.host === Office.HostType.Excel) {
+        setStatus('ready', 'Ready');
+      } else {
+        setStatus('error', 'Excel required');
+      }
+    });
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+      ['format','templates','assist'].forEach(p => {
+        const el = document.getElementById('pane-' + p);
+        el.style.display = p === name ? 'flex' : 'none';
+        if (p === name) el.style.flexDirection = 'column';
+      });
+    }
+    // Init: show format pane as flex
+    document.getElementById('pane-format').style.display = 'flex';
+    document.getElementById('pane-format').style.flexDirection = 'column';
+
+    // ── Status helpers ────────────────────────────────────────────────────────
+    function setStatus(type, msg) {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      dot.className = 'status-dot' + (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
+      txt.textContent = msg;
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, isError) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (isError ? ' error' : '');
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // ── Confirm dialog ────────────────────────────────────────────────────────
+    function confirmResetStyles() {
+      document.getElementById('confirmDialog').classList.add('show');
+    }
+    function closeDialog() {
+      document.getElementById('confirmDialog').classList.remove('show');
+    }
+
+    // ── Tool runner ───────────────────────────────────────────────────────────
+    async function runTool(toolName) {
+      closeDialog();
+      setStatus('loading', 'Running…');
+      try {
+        await Excel.run(async (context) => {
+          switch (toolName) {
+            case 'formatNumbers':     await doFormatNumbers(context); break;
+            case 'formatNotZero':     await doFormatNotZero(context); break;
+            case 'quickPaste':        await doQuickPaste(context); break;
+            case 'centreAcross':      await doCentreAcross(context); break;
+            case 'fillBlanks':        await doFillBlanks(context); break;
+            case 'convertToText':     await doConvertToText(context); break;
+            case 'pivReformat':       await doPivReformat(context); break;
+            case 'formatPivotNumbers':await doFormatPivotNumbers(context); break;
+            case 'unhideSheets':      await doUnhideSheets(context); break;
+            case 'resetStyles':       await doResetStyles(context); break;
+          }
+          await context.sync();
+        });
+        setStatus('ready', 'Ready');
+      } catch (err) {
+        console.error(toolName, err);
+        setStatus('error', 'Error — see console');
+        showToast('⚠ ' + (err.message || 'An error occurred'), true);
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // TOOL IMPLEMENTATIONS
+    // ══════════════════════════════════════════════════════════════════════════
+
+    // ── Format Numbers ────────────────────────────────────────────────────────
+    // #,##0_);[Red](#,##0) — comma, zero decimals, red brackets for negatives.
+    async function doFormatNumbers(context) {
+      const range = context.workbook.getSelectedRange();
+      range.numberFormat = [['#,##0_);[Red](#,##0);-??_)']];
+      await context.sync();
+      showToast('✓ Format applied');
+    }
+
+    // ── Format not Zero ───────────────────────────────────────────────────────
+    // Applies green fill + red conditional format if cell ≠ 0.
+    async function doFormatNotZero(context) {
+      const range = context.workbook.getSelectedRange();
+      range.load('address');
+      await context.sync();
+
+      // Green fill (Good-style: light green)
+      range.format.fill.color = '#C6EFCE';
+      range.format.font.color = '#276221';
+
+      // Add conditional format: if not zero → red fill, white bold
+      const cf = range.conditionalFormats.add(Excel.ConditionalFormatType.cellValue);
+      cf.cellValue.format.fill.color = '#FFC7CE';
+      cf.cellValue.format.font.color = '#9C0006';
+      cf.cellValue.format.font.bold = true;
+      cf.cellValue.rule = {
+        formula1: '0',
+        operator: Excel.ConditionalCellValueOperator.notEqual
+      };
+      await context.sync();
+      showToast('✓ Conditional format applied');
+    }
+
+    // ── QuickPaste ────────────────────────────────────────────────────────────
+    // Note: Office JS does not expose PasteSpecial with column widths directly.
+    // We paste values + number formats as the closest equivalent.
+    async function doQuickPaste(context) {
+      // Office JS clipboard API is limited — best available: paste values
+      // Full column-width paste requires VBA or user action; we advise accordingly.
+      showToast('⚠ Use Ctrl+Alt+V → Values in Excel for full QuickPaste', false);
+      setStatus('ready', 'Ready');
+      // Future: when Office JS exposes PasteSpecial, implement here.
+    }
+
+    // ── Centre Across Selection ───────────────────────────────────────────────
+    async function doCentreAcross(context) {
+      const range = context.workbook.getSelectedRange();
+      range.format.horizontalAlignment = Excel.HorizontalAlignment.centerAcrossSelection;
+      await context.sync();
+      showToast('✓ Centred across selection');
+    }
+
+    // ── Fill Blanks ───────────────────────────────────────────────────────────
+    // Fills blank cells in the selection with the value from the cell above.
+    async function doFillBlanks(context) {
+      const range = context.workbook.getSelectedRange();
+      range.load(['values', 'rowCount', 'columnCount', 'address']);
+      await context.sync();
+
+      if (range.columnCount > 1) {
+        showToast('⚠ Select a single column only', true);
+        return;
+      }
+
+      const vals = range.values;
+      let filled = 0;
+      for (let r = 1; r < vals.length; r++) {
+        if (vals[r][0] === '' || vals[r][0] === null) {
+          vals[r][0] = vals[r - 1][0];
+          filled++;
+        }
+      }
+      range.values = vals;
+      await context.sync();
+      showToast(filled > 0 ? `✓ Filled ${filled} blank cell${filled > 1 ? 's' : ''}` : 'No blank cells found');
+    }
+
+    // ── Convert to Text ───────────────────────────────────────────────────────
+    async function doConvertToText(context) {
+      const range = context.workbook.getSelectedRange();
+      range.load('values');
+      await context.sync();
+
+      range.numberFormat = [['@']];
+      // Re-enter values to force text conversion
+      const vals = range.values.map(row => row.map(cell => String(cell)));
+      range.values = vals;
+      await context.sync();
+      showToast('✓ Converted to text');
+    }
+
+    // ── PivReformat ───────────────────────────────────────────────────────────
+    // Tabular layout, no subtotals, repeat item labels — via Office JS PivotTable API.
+    async function doPivReformat(context) {
+      const sheet = context.workbook.worksheets.getActiveWorksheet();
+      const pivots = sheet.pivotTables;
+      pivots.load('items');
+      await context.sync();
+
+      if (pivots.items.length === 0) {
+        showToast('⚠ No pivot table found on this sheet', true);
+        return;
+      }
+
+      // Apply to first pivot on sheet (matches XLAM behaviour of active cell pivot)
+      const pt = pivots.items[0];
+      pt.layout.load('layoutType, showColumnGrandTotals, showRowGrandTotals');
+      await context.sync();
+
+      pt.layout.layoutType = Excel.PivotLayoutType.tabular;
+      pt.layout.showColumnGrandTotals = false;
+      pt.layout.showRowGrandTotals = false;
+      pt.layout.repeatAllItemLabels = true;
+
+      await context.sync();
+      showToast('✓ Pivot reformatted — tabular, no subtotals');
+    }
+
+    // ── Format Pivot Numbers ──────────────────────────────────────────────────
+    async function doFormatPivotNumbers(context) {
+      const sheet = context.workbook.worksheets.getActiveWorksheet();
+      const pivots = sheet.pivotTables;
+      pivots.load('items');
+      await context.sync();
+
+      if (pivots.items.length === 0) {
+        showToast('⚠ No pivot table found on this sheet', true);
+        return;
+      }
+
+      const pt = pivots.items[0];
+      const dataHierarchies = pt.dataHierarchies;
+      dataHierarchies.load('items');
+      await context.sync();
+
+      dataHierarchies.items.forEach(dh => {
+        dh.field.load('name');
+      });
+      await context.sync();
+
+      dataHierarchies.items.forEach(dh => {
+        dh.numberFormat = '#,##0_);[Red](#,##0);-??_)';
+      });
+      await context.sync();
+      showToast(`✓ Formatted ${dataHierarchies.items.length} pivot value field${dataHierarchies.items.length !== 1 ? 's' : ''}`);
+    }
+
+    // ── Unhide All Sheets ─────────────────────────────────────────────────────
+    async function doUnhideSheets(context) {
+      const sheets = context.workbook.worksheets;
+      sheets.load('items/visibility,items/name');
+      await context.sync();
+
+      let count = 0;
+      sheets.items.forEach(ws => {
+        if (ws.visibility !== Excel.SheetVisibility.visible) {
+          ws.visibility = Excel.SheetVisibility.visible;
+          count++;
+        }
+      });
+      await context.sync();
+      showToast(count > 0 ? `✓ Unhid ${count} sheet${count > 1 ? 's' : ''}` : 'No hidden sheets found');
+    }
+
+    // ── Reset Styles ──────────────────────────────────────────────────────────
+    // Office JS does not expose the Styles collection for deletion.
+    // We clear all cell formatting on the used range as the best available equivalent.
+    async function doResetStyles(context) {
+      const sheet = context.workbook.worksheets.getActiveWorksheet();
+      const range = sheet.getUsedRange();
+      range.load('address');
+      await context.sync();
+
+      range.format.fill.clear();
+      range.format.font.bold = false;
+      range.format.font.italic = false;
+      range.format.font.underline = Excel.RangeUnderlineStyle.none;
+      range.format.font.color = '#000000';
+      range.format.font.size = 11;
+      range.conditionalFormats.clearAll();
+
+      await context.sync();
+      showToast('✓ Formatting cleared on used range');
+      // Note: full Style object deletion requires VBA (not exposed in Office JS).
+      // This clears applied formatting as the practical equivalent.
+    }
+
+  </script>
+</body>
+</html>

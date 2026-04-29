@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- PBS Excel Tools — commands-excel.html v1.0.0
+     Function file for ExecuteFunction ribbon buttons.
+     This page is never shown to users — it runs silently in the background.
+     Each ribbonXxx function mirrors the task pane implementation exactly. -->
+  <meta charset="UTF-8"/>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script>
+    Office.onReady(() => {});
+
+    // ── Format Numbers ────────────────────────────────────────────────────────
+    async function ribbonFormatNumbers(event) {
+      try {
+        await Excel.run(async (context) => {
+          const range = context.workbook.getSelectedRange();
+          range.numberFormat = [['#,##0_);[Red](#,##0);-??_)']];
+          await context.sync();
+        });
+      } catch (e) { console.error('ribbonFormatNumbers', e); }
+      event.completed();
+    }
+
+    // ── Format not Zero ───────────────────────────────────────────────────────
+    async function ribbonFormatNotZero(event) {
+      try {
+        await Excel.run(async (context) => {
+          const range = context.workbook.getSelectedRange();
+          range.format.fill.color = '#C6EFCE';
+          range.format.font.color = '#276221';
+          const cf = range.conditionalFormats.add(Excel.ConditionalFormatType.cellValue);
+          cf.cellValue.format.fill.color = '#FFC7CE';
+          cf.cellValue.format.font.color = '#9C0006';
+          cf.cellValue.format.font.bold = true;
+          cf.cellValue.rule = {
+            formula1: '0',
+            operator: Excel.ConditionalCellValueOperator.notEqual
+          };
+          await context.sync();
+        });
+      } catch (e) { console.error('ribbonFormatNotZero', e); }
+      event.completed();
+    }
+
+    // ── PivReformat ───────────────────────────────────────────────────────────
+    async function ribbonPivReformat(event) {
+      try {
+        await Excel.run(async (context) => {
+          const sheet = context.workbook.worksheets.getActiveWorksheet();
+          const pivots = sheet.pivotTables;
+          pivots.load('items');
+          await context.sync();
+          if (pivots.items.length > 0) {
+            const pt = pivots.items[0];
+            pt.layout.layoutType = Excel.PivotLayoutType.tabular;
+            pt.layout.showColumnGrandTotals = false;
+            pt.layout.showRowGrandTotals = false;
+            pt.layout.repeatAllItemLabels = true;
+            await context.sync();
+          }
+        });
+      } catch (e) { console.error('ribbonPivReformat', e); }
+      event.completed();
+    }
+
+    // ── Format Pivot Numbers ──────────────────────────────────────────────────
+    async function ribbonFormatPivotNumbers(event) {
+      try {
+        await Excel.run(async (context) => {
+          const sheet = context.workbook.worksheets.getActiveWorksheet();
+          const pivots = sheet.pivotTables;
+          pivots.load('items');
+          await context.sync();
+          if (pivots.items.length > 0) {
+            const pt = pivots.items[0];
+            const dataHierarchies = pt.dataHierarchies;
+            dataHierarchies.load('items');
+            await context.sync();
+            dataHierarchies.items.forEach(dh => {
+              dh.numberFormat = '#,##0_);[Red](#,##0);-??_)';
+            });
+            await context.sync();
+          }
+        });
+      } catch (e) { console.error('ribbonFormatPivotNumbers', e); }
+      event.completed();
+    }
+
+    // ── Unhide All Sheets ─────────────────────────────────────────────────────
+    async function ribbonUnhideSheets(event) {
+      try {
+        await Excel.run(async (context) => {
+          const sheets = context.workbook.worksheets;
+          sheets.load('items/visibility');
+          await context.sync();
+          sheets.items.forEach(ws => {
+            if (ws.visibility !== Excel.SheetVisibility.visible) {
+              ws.visibility = Excel.SheetVisibility.visible;
+            }
+          });
+          await context.sync();
+        });
+      } catch (e) { console.error('ribbonUnhideSheets', e); }
+      event.completed();
+    }
+  </script>
+</head>
+<body></body>
+</html>
