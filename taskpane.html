@@ -1,40 +1,26 @@
-<!-- PBS Paragraph Library v2.3.1 -->
-<!-- v1.0.0 - Base working version -->
-<!-- v1.1.0 - Added eye expand preview -->
-<!-- v1.1.1 - Increased inserted heading font size from 14pt to 16pt -->
-<!-- v1.1.2 - Show version number in status bar -->
-<!-- v1.2.0 - Prescott branding + logo; dynamic categories from JSON; vertical category sidebar;
-              SortOrder applied; A-Z toggle; recently used; copy to clipboard; keyboard nav;
-              smooth animations; word count; placeholder warning badge; Escape clears search -->
-<!-- v1.2.1 - Categories moved above paragraph list as wrapping pill grid; removed Copy button -->
-<!-- v2.0.0 - Unified Word + Outlook single file; host-detected insert; Outlook: Email/All mode,
-              heading toggle in header, prose-merge insert, letter-only soft divider -->
-<!-- v2.1.0 - Heading toggle visible in both hosts (Word default on, Outlook default off);
-              Word-only "Match doc style" second toggle (H3 via Word JS API vs bold inline);
-              H4 subheadings in content respected in both insert paths -->
-<!-- v2.1.1 - H3/H4 styled in eye preview panel; card preview text unaffected -->
-<!-- v2.1.2 - Modified date shown in card footer next to word count -->
-<!-- v2.2.0 - Full Word.run paragraph-by-paragraph insert for doc style ON;
-              content parser splits on h4/p/ul/ol/table segments;
-              Heading 3 (title), Heading 4 (subheadings), Normal (body/lists), table via insertHtml;
-              doc style OFF uses robust Aptos inline CSS: 16pt bold title, 12pt bold H4, 11pt body -->
-<!-- v2.3.0 - Doc style ON rebuilt using insertOoxml for reliable style inheritance;
-              OOXML generator handles p/h3/h4/ul/ol/table segments with inline formatting;
-              Word manifest requires WordApi 1.3 for insertOoxml support -->
-<!-- v2.3.1 - Search bar + sort toggle moved below header into main-body so Office system banners
-              (e.g. add-in catalog warnings) do not obscure search or heading toggles -->
-<!-- v2.3.2 - Fixed heading toggle not showing in Word: added missing id="positionBar";
-              entire app moved into single .main-body flex column -->
-<!-- v2.3.3 - #app switched to position:fixed with dynamic MutationObserver banner offset;
-              app always sits below Office notification banners; version bump rule applied -->
-<!-- v2.3.4 - More aggressive banner detection (reverted) -->
-<!-- v2.3.5 - Removed position:fixed entirely; body is flex column, #app is flex:1 child;
-              Office banner flows above #app naturally, app fills remaining height -->
-              entire app (header, toggles, search, list, footer) moved inside single .main-body
-              flex column so Office banner pushes whole app down without clipping anything -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- PBS Paragraph Library v2.3.6
+     v1.0.0  Base working version
+     v1.1.0  Eye expand preview
+     v1.1.1  Heading font 16pt
+     v1.1.2  Version in status bar
+     v1.2.0  Prescott branding, dynamic categories, sidebar, SortOrder, A-Z, recently used, keyboard nav, animations, word count, placeholder badge
+     v1.2.1  Category pills above list, copy button removed
+     v2.0.0  Unified Word+Outlook, host-detected insert, Outlook email/all mode
+     v2.1.0  Heading toggle both hosts, Match doc style (Word), H4 support
+     v2.1.1  H3/H4 styled in preview panel
+     v2.1.2  Modified date in card footer
+     v2.2.0  Word.run paragraph insert, Heading3/4/Normal styles
+     v2.3.0  insertOoxml for doc style ON
+     v2.3.1  Search bar moved below header
+     v2.3.2  positionBar id fix, app in single flex column
+     v2.3.3  position:fixed + MutationObserver banner detection
+     v2.3.4  More aggressive banner detection (reverted)
+     v2.3.5  Simple flex flow - body column, #app flex:1
+     v2.3.6  Fixed orphaned text rendering as visible content; DOCTYPE moved to line 1;
+             version history moved inside head comment; banner CSS approach retained -->
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PBS Paragraph Library</title>
@@ -278,7 +264,7 @@
 
 <script>
 
-const VERSION = "v2.3.5";
+const VERSION = "v2.3.6";
 const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
 const LIST_NAME = "ParagraphLibrary";
 const MAX_RECENT = 3;
