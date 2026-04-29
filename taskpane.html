@@ -20,7 +20,8 @@
      v2.3.4  More aggressive banner detection (reverted)
      v2.3.5  Simple flex flow - body column, #app flex:1
      v2.3.6  Fixed orphaned text rendering as visible content; DOCTYPE moved to line 1;
-             version history moved inside head comment; banner CSS approach retained -->
+             version history moved inside head comment; banner CSS approach retained
+     v2.3.7  Fixed body min-height:100% -> height:100%; restores footer visibility and list scroll -->
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PBS Paragraph Library</title>
@@ -37,7 +38,7 @@
       --radius: 8px; --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
     }
     html { height:100%; }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; min-height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; height:100%; display:flex; flex-direction:column; overflow:hidden; }
 
     /* Header — logo, host badge, heading toggle only. Search moved below. */
     .header { background:var(--surface); border-bottom:1px solid var(--border); padding:9px 13px 8px; flex-shrink:0; }
@@ -264,7 +265,7 @@
 
 <script>
 
-const VERSION = "v2.3.6";
+const VERSION = "v2.3.7";
 const SHAREPOINT_SITE_URL = "https://prescottsolutions.sharepoint.com/sites/PrescottBusinessSolutions";
 const LIST_NAME = "ParagraphLibrary";
 const MAX_RECENT = 3;
